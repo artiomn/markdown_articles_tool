@@ -202,7 +202,7 @@ if __name__ == '__main__':
     parser.add_argument('article_file_path', type=str,
                         help='an integer for the accumulator')
     parser.add_argument('-s', '--skip-list', default=None,
-                        help='skip URL\'s from this list (or file with a leading \'@\')')
+                        help='skip URL\'s from the comma-separated list (or file with a leading \'@\')')
 
     args = parser.parse_args()
 
