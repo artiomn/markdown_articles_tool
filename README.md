@@ -27,3 +27,15 @@ Example:
 ./images_extractor.py nc-1-zfs/article.md
 ```
 
+Example 2:
+
+```
+./images_extractor.py not-nas/sov/article.md -s "http://www.ossec.net/_images/ossec-arch.jpg"
+```
+
+
+## Warning
+
+This tool will download only images, used Markdown syntax to link.
+Images, linked with HTML "<mg>" tag will not be downloaded!
+
