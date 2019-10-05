@@ -1,4 +1,4 @@
-# Markdown articles images fixer
+# Markdown articles image links fixer
 
 Simple script to download images and replace image links in markdown documents.
 I.e. you have Markdown document with HTTP links.
