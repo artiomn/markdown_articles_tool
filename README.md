@@ -39,5 +39,5 @@ Example 2:
 ## Warning
 
 This tool will download only images, used Markdown syntax to link.
-Images, linked with HTML "<img>" tag will not be downloaded!
+Images, linked with HTML "\<img\>" tag will not be downloaded!
 
