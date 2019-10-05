@@ -90,12 +90,13 @@ class ArticleTransformer:
 
     img_dirname = 'images'
 
-    def __init__(self, article_path: str, skip_list: Optional[List[str]] = None):
+    def __init__(self, article_path: str, skip_list: Optional[List[str]] = None, skip_all: bool = False):
         self._article_file_path = article_path
         self._skip_list = sorted(skip_list) if skip_list is not None else []
         self._imgs_dir = os.path.join(os.path.dirname(self._article_file_path), self.img_dirname)
         self._md_conv = markdown.Markdown(extensions=[ImgExtExtension()])
         self._replacement_mapping = {}
+        self._skip_all = skip_all
 
     def _read_article(self) -> List[str]:
         with open(self._article_file_path, 'r') as m_file:
@@ -113,6 +114,7 @@ class ArticleTransformer:
         imgs_dir = self._imgs_dir
         replacement_mapping = self._replacement_mapping
         skip_list = self._skip_list
+        img_count = len(images)
 
         try:
             os.makedirs(self._imgs_dir)
@@ -131,15 +133,23 @@ class ArticleTransformer:
                 print(f'Image {img_num + 1} ["{img_url}"] was skipped, because it has incorrect URL...')
                 continue
 
-            print(f'Downloading image {img_num + 1} from "{img_url}"...')
-            try:
-                img_response = requests.get(img_url, allow_redirects=True)
-            except requests.exceptions.SSLError:
-                print('Incorrect SSL certificate, trying to download without verifying...')
-                img_response = requests.get(img_url, allow_redirects=True, verify=False)
+            print(f'Downloading image {img_num + 1} of {img_count} from "{img_url}"...')
 
-            if img_response.status_code != 200:
-                raise OSError(str(img_response))
+            try:
+                try:
+                    img_response = requests.get(img_url, allow_redirects=True)
+                except requests.exceptions.SSLError:
+                    print('Incorrect SSL certificate, trying to download without verifying...')
+                    img_response = requests.get(img_url, allow_redirects=True, verify=False)
+
+                if img_response.status_code != 200:
+                    raise OSError(str(img_response))
+            except Exception as e:
+                if self._skip_all:
+                    print(f'Warning: can\'t download image {img_num + 1}, error: [{str(e)}], '
+                          'but processing will be continued, because `skip_all` flag is set')
+                    continue
+                raise
 
             img_filename = get_filename_from_url(img_response)
             img_path = path_join(imgs_dir, img_filename)
@@ -180,6 +190,7 @@ def main(args):
 
     article_file = os.path.expanduser(args.article_file_path)
     skip_list = args.skip_list
+    skip_all = args.skip_all_incorrect
 
     print('Processing started...')
 
@@ -192,7 +203,7 @@ def main(args):
         else:
             skip_list = [s.strip() for s in skip_list.split(',')]
 
-    ArticleTransformer(article_file, skip_list).run()
+    ArticleTransformer(article_file, skip_list, skip_all).run()
 
     print('Processing finished successfully...')
 
@@ -203,6 +214,8 @@ if __name__ == '__main__':
                         help='an integer for the accumulator')
     parser.add_argument('-s', '--skip-list', default=None,
                         help='skip URL\'s from the comma-separated list (or file with a leading \'@\')')
+    parser.add_argument('-a', '--skip-all-incorrect', default=False, action='store_true',
+                        help='skip all incorrect images')
 
     args = parser.parse_args()
 

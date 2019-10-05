@@ -19,6 +19,8 @@ optional arguments:
   -h, --help            show this help message and exit
   -s SKIP_LIST, --skip-list SKIP_LIST
                         skip URL's from the comma-separated list (or file with a leading '@')
+  -a, --skip-all-incorrect
+                        skip all incorrect images
 ```
 
 Example:
@@ -30,12 +32,12 @@ Example:
 Example 2:
 
 ```
-./images_extractor.py not-nas/sov/article.md -s "http://www.ossec.net/_images/ossec-arch.jpg"
+./images_extractor.py not-nas/sov/article.md -s "http://www.ossec.net/_images/ossec-arch.jpg" -a
 ```
 
 
 ## Warning
 
 This tool will download only images, used Markdown syntax to link.
-Images, linked with HTML "<mg>" tag will not be downloaded!
+Images, linked with HTML "<img>" tag will not be downloaded!
 
