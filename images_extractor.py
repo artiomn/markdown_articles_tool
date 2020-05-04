@@ -88,9 +88,9 @@ class ArticleTransformer:
     Markdown article transformation class.
     """
 
-    img_dirname = 'images'
-
-    def __init__(self, article_path: str, skip_list: Optional[List[str]] = None, skip_all: bool = False):
+    def __init__(self, article_path: str, skip_list: Optional[List[str]] = None, skip_all: bool = False, img_dirname: str = "images", img_publicpath: str = ""):
+        self.img_dirname = img_dirname
+        self.img_publicpath = img_publicpath
         self._article_file_path = article_path
         self._skip_list = sorted(skip_list) if skip_list is not None else []
         self._imgs_dir = os.path.join(os.path.dirname(self._article_file_path), self.img_dirname)
@@ -111,6 +111,7 @@ class ArticleTransformer:
     def _download_images(self, images: List[str]) -> NoReturn:
         path_join = os.path.join
         img_dirname = self.img_dirname
+        img_publicpath = self.img_publicpath
         imgs_dir = self._imgs_dir
         replacement_mapping = self._replacement_mapping
         skip_list = self._skip_list
@@ -154,7 +155,7 @@ class ArticleTransformer:
             img_filename = get_filename_from_url(img_response)
             img_path = path_join(imgs_dir, img_filename)
             print(f'Image will be written to the file "{img_path}"...')
-            replacement_mapping.setdefault(img_url, path_join(img_dirname, img_filename))
+            replacement_mapping.setdefault(img_url, path_join(img_publicpath or img_dirname, img_filename))
 
             with open(img_path, 'wb') as img_file:
                 img_file.write(img_response.content)
@@ -203,7 +204,7 @@ def main(args):
         else:
             skip_list = [s.strip() for s in skip_list.split(',')]
 
-    ArticleTransformer(article_file, skip_list, skip_all).run()
+    ArticleTransformer(article_file, skip_list, skip_all, args.images_dirname, args.images_publicpath).run()
 
     print('Processing finished successfully...')
 
@@ -214,6 +215,10 @@ if __name__ == '__main__':
                         help='an integer for the accumulator')
     parser.add_argument('-s', '--skip-list', default=None,
                         help='skip URL\'s from the comma-separated list (or file with a leading \'@\')')
+    parser.add_argument('-d', '--images-dirname', default="images",
+                        help='Folder in which to download images')
+    parser.add_argument('-p', '--images-publicpath', default="",
+                        help='Public path to the folder of downloaded images')
     parser.add_argument('-a', '--skip-all-incorrect', default=False, action='store_true',
                         help='skip all incorrect images')
 
