@@ -1,3 +1,5 @@
+![Python application](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20application/badge.svg)
+
 # Markdown articles image links fixer
 
 Simple script to download images and replace image links in markdown documents.
