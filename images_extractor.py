@@ -5,10 +5,6 @@ Simple script to download images and replace image links in markdown documents.
 """
 
 import argparse
-import markdown
-from markdown.treeprocessors import Treeprocessor
-from markdown.extensions import Extension
-from markdown.inlinepatterns import SimpleTagPattern
 from mimetypes import guess_extension, types_map
 import os
 import re
@@ -16,27 +12,12 @@ import requests
 import sys
 import unicodedata
 
-from typing import Optional, List, NoReturn
+from typing import Optional, List
+
+from pkg.transformers.md.transformer import ArticleTransformer
 
 
 del types_map['.jpe']
-
-
-class ImgExtractor(Treeprocessor):
-    def run(self, doc):
-        """
-        Find all images and append to markdown.images.
-        """
-
-        self.md.images = []
-        for image in doc.findall('.//img'):
-            self.md.images.append(image.get('src'))
-
-
-class ImgExtExtension(Extension):
-    def extendMarkdown(self, md, md_globals):
-        img_ext = ImgExtractor(md)
-        md.treeprocessors.register(img_ext, 'imgext', 20)
 
 
 def slugify(value):
@@ -83,37 +64,21 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
     return result
 
 
-class ArticleTransformer:
-    """
-    Markdown article transformation class.
-    """
-
-    def __init__(self, article_path: str, skip_list: Optional[List[str]] = None, skip_all: bool = False, img_dirname: str = "images", img_publicpath: str = ""):
+class ImageDownloader:
+    def __init__(self, article_path: str, skip_list: Optional[List[str]] = None, skip_all: bool = False, img_dirname: str = 'images', img_publicpath: str = ''):
         self.img_dirname = img_dirname
         self.img_publicpath = img_publicpath
         self._article_file_path = article_path
         self._skip_list = sorted(skip_list) if skip_list is not None else []
         self._imgs_dir = os.path.join(os.path.dirname(self._article_file_path), self.img_dirname)
-        self._md_conv = markdown.Markdown(extensions=[ImgExtExtension()])
-        self._replacement_mapping = {}
         self._skip_all = skip_all
 
-    def _read_article(self) -> List[str]:
-        with open(self._article_file_path, 'r') as m_file:
-            self._md_conv.convert(m_file.read())
-
-        print(f'Images links count = {len(self._md_conv.images)}')
-        images = set(self._md_conv.images)
-        print(f'Unique images links count = {len(images)}')
-
-        return images
-
-    def _download_images(self, images: List[str]) -> NoReturn:
+    def download_images(self, images: List[str]) -> dict:
         path_join = os.path.join
         img_dirname = self.img_dirname
         img_publicpath = self.img_publicpath
         imgs_dir = self._imgs_dir
-        replacement_mapping = self._replacement_mapping
+        replacement_mapping = {}
         skip_list = self._skip_list
         img_count = len(images)
 
@@ -161,27 +126,7 @@ class ArticleTransformer:
                 img_file.write(img_response.content)
                 img_file.close()
 
-    def _fix_document_urls(self) -> NoReturn:
-        print('Replacing images urls in the document...')
-        replacement_mapping = self._replacement_mapping
-        lines = []
-        with open(self._article_file_path, 'r') as infile:
-            for line in infile:
-                for src, target in replacement_mapping.items():
-                    line = line.replace(src, target)
-                lines.append(line)
-
-        with open(self._article_file_path, 'w') as outfile:
-            for line in lines:
-                outfile.write(line)
-
-    def run(self):
-        """
-        Run article conversion.
-        """
-
-        self._download_images(self._read_article())
-        self._fix_document_urls()
+        return replacement_mapping
 
 
 def main(args):
@@ -204,7 +149,15 @@ def main(args):
         else:
             skip_list = [s.strip() for s in skip_list.split(',')]
 
-    ArticleTransformer(article_file, skip_list, skip_all, args.images_dirname, args.images_publicpath).run()
+    ArticleTransformer(article_file,
+                       ImageDownloader(
+                           article_file,
+                           skip_list,
+                           skip_all,
+                           args.images_dirname,
+                           args.images_publicpath
+                           )
+                       ).run()
 
     print('Processing finished successfully...')
 
@@ -215,9 +168,9 @@ if __name__ == '__main__':
                         help='an integer for the accumulator')
     parser.add_argument('-s', '--skip-list', default=None,
                         help='skip URL\'s from the comma-separated list (or file with a leading \'@\')')
-    parser.add_argument('-d', '--images-dirname', default="images",
+    parser.add_argument('-d', '--images-dirname', default='images',
                         help='Folder in which to download images')
-    parser.add_argument('-p', '--images-publicpath', default="",
+    parser.add_argument('-p', '--images-publicpath', default='',
                         help='Public path to the folder of downloaded images')
     parser.add_argument('-a', '--skip-all-incorrect', default=False, action='store_true',
                         help='skip all incorrect images')
