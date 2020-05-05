@@ -34,7 +34,7 @@ class ArticleTransformer:
     Markdown article transformation class.
     """
 
-    def __init__(self, article_path: str, image_downloader: 'ImageDownloader'):
+    def __init__(self, article_path: str, image_downloader):
         self._image_downloader = image_downloader
         self._article_file_path = article_path
         self._md_conv = markdown.Markdown(extensions=[ImgExtExtension()])
