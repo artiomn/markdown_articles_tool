@@ -15,7 +15,7 @@ Syntax:
 ./images_extractor.py [-h] [-s SKIP_LIST] article_file_path
 
 positional arguments:
-  article_file_path     an integer for the accumulator
+  article_file_path     path to the article file in the Markdown format
 
 optional arguments:
   -h, --help            show this help message and exit
