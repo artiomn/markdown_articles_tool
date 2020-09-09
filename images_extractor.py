@@ -76,7 +76,7 @@ class ImageDownloader:
         self._skip_list = set(skip_list) if skip_list is not None else []
         self._images_dir = os.path.join(os.path.dirname(self._article_file_path), self._img_dir_name)
         self._skip_all_errors = skip_all_errors
-        self._downloading_timeout = downloading_timeout
+        self._downloading_timeout = downloading_timeout if downloading_timeout > 0 else None
         self._deduplication = deduplication
 
     def download_images(self, images: List[str]) -> dict:
