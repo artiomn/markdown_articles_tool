@@ -2,25 +2,25 @@
 Images extractor from markdown document.
 """
 
-import markdown
-from markdown.treeprocessors import Treeprocessor
-from markdown.extensions import Extension
-from markdown.inlinepatterns import SimpleTagPattern
+from lxml import html
 from typing import List
 
 
 __all__ = ['ArticleTransformer']
 
 
-class ImgExtractor(Treeprocessor):
+class ImgExtractor:
     def run(self, doc):
         """
-        Find all images and append to markdown.images.
+        Find all images in HTML.
         """
 
-        self.md.images = []
-        for image in doc.findall('.//img'):
-            self.md.images.append(image.get('src'))
+        tree = html.fromstring(doc)
+        images = tree.xpath('//img/@src')
+        # links = tree.xpath('//a/@href')
+
+        return images
+
 
 
 class ImgExtExtension(Extension):
@@ -71,3 +71,4 @@ class ArticleTransformer:
 
         self._replacement_mapping = self._image_downloader.download_images(self._read_article())
         self._fix_document_urls()
+

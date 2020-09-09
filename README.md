@@ -2,6 +2,8 @@
 
 # Markdown articles image links fixer
 
+Version 0.0.2.
+
 Simple script to download images and replace image links in markdown documents.
 I.e. you have Markdown document with HTTP links.
 This script will find all links to images, download images and fix links in the document.
@@ -12,7 +14,13 @@ This script will find all links to images, download images and fix links in the 
 Syntax:
 
 ```
-./images_extractor.py [-h] [-s SKIP_LIST] article_file_path
+sage: images_extractor.py [-h] [-s SKIP_LIST] [-d IMAGES_DIRNAME]
+                           [-p IMAGES_PUBLICPATH] [-a]
+                           [-t DOWNLOADING_TIMEOUT] [-D] [--version]
+                           article_file_path
+
+Simple script to download images and replace image links in markdown
+documents.
 
 positional arguments:
   article_file_path     path to the article file in the Markdown format
@@ -28,6 +36,12 @@ optional arguments:
                         Public path to the folder of downloaded images
   -a, --skip-all-incorrect
                         skip all incorrect images
+  -t DOWNLOADING_TIMEOUT, --downloading-timeout DOWNLOADING_TIMEOUT
+                        how many seconds to wait before downloading will be
+                        failed
+  -D, --dedup-with-hash
+                        Deduplicate images, using content hash
+  --version             return version number
 ```
 
 Example:
