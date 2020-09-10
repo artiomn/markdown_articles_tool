@@ -1,12 +1,19 @@
 ![Python application](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20application/badge.svg)
 
-# Markdown articles image links fixer
+# Markdown articles tool 0.0.3
 
-Version 0.0.2.
+Version 0.0.3.
 
-Simple script to download images and replace image links in markdown documents.
-I.e. you have Markdown document with HTTP links.
-This script will find all links to images, download images and fix links in the document.
+Tool can be used:
+
+- To download markdown article with images and replace image links.  
+  Find all links to images, download images and fix links in the document.
+  Similar images may be deduplicated by content hash.
+  
+**In the next version:**
+    - Convert Markdown documents to:
+      * HTML.
+      * PDF.
 
 
 ## Usage
@@ -14,16 +21,17 @@ This script will find all links to images, download images and fix links in the 
 Syntax:
 
 ```
-sage: images_extractor.py [-h] [-s SKIP_LIST] [-d IMAGES_DIRNAME]
+usage: images_extractor.py [-h] [-s SKIP_LIST] [-d IMAGES_DIRNAME]
                            [-p IMAGES_PUBLICPATH] [-a]
                            [-t DOWNLOADING_TIMEOUT] [-D] [--version]
-                           article_file_path
+                           article_file_path_or_url
 
 Simple script to download images and replace image links in markdown
 documents.
 
 positional arguments:
-  article_file_path     path to the article file in the Markdown format
+  article_file_path_or_url
+                        path to the article file in the Markdown format
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -66,5 +74,3 @@ find content/ -name "*.md" | xargs -n1 ./images_extractor.py
 
 This tool will download only images, used Markdown syntax to link.
 Images, linked with HTML "\<img\>" tag will not be downloaded!
-
-

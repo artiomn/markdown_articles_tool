@@ -37,7 +37,7 @@ class ArticleTransformer:
     def __init__(self, article_path: str, image_downloader):
         self._image_downloader = image_downloader
         self._article_file_path = article_path
-        self._md_conv = markdown.Markdown(extensions=[ImgExtExtension()])
+        self._md_conv = markdown.Markdown(extensions=[ImgExtExtension(), 'md_in_html'])
         self._replacement_mapping = {}
 
     def _read_article(self) -> List[str]:
