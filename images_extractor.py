@@ -65,6 +65,10 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
 
 
 class ImageDownloader:
+    """
+    "Smart" images downloader.
+    """
+
     allowed_url_prefixes = {'http', 'ftp'}
 
     def __init__(self, article_path: str, skip_list: Optional[List[str]] = None, skip_all_errors: bool = False,
@@ -80,6 +84,12 @@ class ImageDownloader:
         self._deduplication = deduplication
 
     def download_images(self, images: List[str]) -> dict:
+        """
+        Download and save images from the list.
+
+        :return URL -> file path mapping.
+        """
+
         replacement_mapping = {}
         hash_to_path_mapping = {}
         skip_list = self._skip_list
@@ -122,7 +132,6 @@ class ImageDownloader:
             image_content = img_response.content
 
             if deduplication:
-                # path_to_hash_mapping.
                 new_content_hash = hashlib.sha256(image_content).digest()
                 existed_file_name = hash_to_path_mapping.get(new_content_hash)
                 if existed_file_name is not None:
@@ -174,6 +183,10 @@ class ImageDownloader:
             img_file.close()
 
     def _is_allowed_url_prefix(self, url: str) -> bool:
+        """
+        Check url for prefix match.
+        """
+
         for prefix in self.allowed_url_prefixes:
             if url.startswith(prefix):
                 return True
@@ -181,6 +194,10 @@ class ImageDownloader:
         return False
 
     def _correct_paths(self, replacement_mapping, document_img_path, img_url, img_filename):
+        """
+        Fix path if a file with the similar name exists already.
+        """
+
         # Images can have similar name, but different URLs, but I want to save original filename, if possible.
         for url, path in replacement_mapping.items():
             if document_img_path == path and img_url != url:
