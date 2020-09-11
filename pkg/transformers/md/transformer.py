@@ -54,7 +54,7 @@ class ArticleTransformer:
         print('Replacing images urls in the document...')
         replacement_mapping = self._replacement_mapping
         lines = []
-        with open(self._article_file_path, 'r') as infile:
+        with open(self._article_file_path, 'r', encoding='utf8') as infile:
             for line in infile:
                 for src, target in replacement_mapping.items():
                     line = line.replace(src, target)
