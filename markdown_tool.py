@@ -7,6 +7,8 @@ Simple script to download images and replace image links in markdown documents.
 import argparse
 import os
 
+from datetime import datetime
+from time import strftime
 from mimetypes import types_map
 
 from pkg.transformers.md.transformer import ArticleTransformer
@@ -30,6 +32,8 @@ def main(arguments):
     Entrypoint.
     """
 
+    print(f'Markdown tool version {__version__} started...')
+
     article_link = arguments.article_file_path_or_url
     if is_url(article_link):
         response = download_from_url(article_link, timeout=arguments.downloading_timeout)
@@ -44,7 +48,7 @@ def main(arguments):
     skip_list = arguments.skip_list
     skip_all = arguments.skip_all_incorrect
 
-    print('Processing started...')
+    print(f'File "{article_path}" will be processed...')
 
     if isinstance(skip_list, str):
         if skip_list.startswith('@'):
@@ -71,11 +75,17 @@ def main(arguments):
     assert len(formatter) == 1
     formatter = formatter[0]
 
-    article_out_path = f'{os.path.splitext(article_path)[0]}.{formatter.format}'
+    article_file_name = os.path.splitext(article_path)[0]
+    article_out_path = f'{article_file_name}.{formatter.format}'
+    if article_path == article_out_path and not arguments.remove_source:
+        article_out_path = f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{formatter.format}'
     print(f'Writing file into "{article_out_path}"...')
 
     with open(article_out_path, 'wb') as outfile:
         outfile.write(formatter.write(result))
+
+    if arguments.remove_source and article_path != article_out_path:
+        os.remove(article_path)
 
     print('Processing finished successfully...')
 
@@ -98,6 +108,8 @@ if __name__ == '__main__':
                         help='how many seconds to wait before downloading will be failed')
     parser.add_argument('-D', '--dedup-with-hash', default=False, action='store_true',
                         help='Deduplicate images, using content hash')
+    parser.add_argument('-R', '--remove-source', default=False, action='store_true',
+                        help='Remove or replace source file')
     parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
                         help='output format')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}', help='return version number')

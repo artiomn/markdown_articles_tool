@@ -1,19 +1,17 @@
 ![Python application](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20application/badge.svg)
 
-# Markdown articles tool 0.0.3
+# Markdown articles tool 0.0.4
 
-Version 0.0.3.
+Version 0.0.4.
 
 Tool can be used:
 
 - To download markdown article with images and replace image links.  
   Find all links to images, download images and fix links in the document.
   Similar images may be deduplicated by content hash.
-  
-**In the next version:**
-    - Convert Markdown documents to:
-      * HTML.
-      * PDF.
+- Convert Markdown documents to:
+  * HTML.
+  * PDF.
 
 
 ## Usage
@@ -21,10 +19,10 @@ Tool can be used:
 Syntax:
 
 ```
-usage: images_extractor.py [-h] [-s SKIP_LIST] [-d IMAGES_DIRNAME]
-                           [-p IMAGES_PUBLICPATH] [-a]
-                           [-t DOWNLOADING_TIMEOUT] [-D] [--version]
-                           article_file_path_or_url
+usage: markdown_tool.py [-h] [-s SKIP_LIST] [-d IMAGES_DIRNAME]
+                        [-p IMAGES_PUBLICPATH] [-a] [-t DOWNLOADING_TIMEOUT]
+                        [-D] [-R] [-o {md,html,pdf}] [--version]
+                        article_file_path_or_url
 
 Simple script to download images and replace image links in markdown
 documents.
@@ -49,6 +47,9 @@ optional arguments:
                         failed
   -D, --dedup-with-hash
                         Deduplicate images, using content hash
+  -R, --remove-source   Remove or replace source file
+  -o {md,html,pdf}, --output-format {md,html,pdf}
+                        output format
   --version             return version number
 ```
 
@@ -61,7 +62,7 @@ Example:
 Example 2:
 
 ```
-./images_extractor.py not-nas/sov/article.md -s "http://www.ossec.net/_images/ossec-arch.jpg" -a
+./images_extractor.py not-nas/sov/article.md -o html -s "http://www.ossec.net/_images/ossec-arch.jpg" -a
 ```
 
 Example 3 (run on a folder):
