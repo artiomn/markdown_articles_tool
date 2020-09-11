@@ -7,7 +7,6 @@ Simple script to download images and replace image links in markdown documents.
 import argparse
 import os
 
-from datetime import datetime
 from time import strftime
 from mimetypes import types_map
 
