@@ -50,7 +50,7 @@ class ArticleTransformer:
 
         return images
 
-    def _fix_document_urls(self) -> None:
+    def _fix_document_urls(self) -> List[str]:
         print('Replacing images urls in the document...')
         replacement_mapping = self._replacement_mapping
         lines = []
@@ -60,9 +60,7 @@ class ArticleTransformer:
                     line = line.replace(src, target)
                 lines.append(line)
 
-        with open(self._article_file_path, 'w') as outfile:
-            for line in lines:
-                outfile.write(line)
+        return lines
 
     def run(self):
         """
@@ -70,4 +68,4 @@ class ArticleTransformer:
         """
 
         self._replacement_mapping = self._image_downloader.download_images(self._read_article())
-        self._fix_document_urls()
+        return self._fix_document_urls()

@@ -12,11 +12,16 @@ from mimetypes import types_map
 from pkg.transformers.md.transformer import ArticleTransformer
 from pkg.image_downloader import ImageDownloader
 from pkg.www_tools import is_url, get_filename_from_url, download_from_url
+from pkg.formatters.simple import SimpleFormatter
+from pkg.formatters.html import HTMLFormatter
+try:
+    from pkg.formatters.pdf import PDFFormatter
+except ModuleNotFoundError:
+    PDFFormatter = None
 
 
-__version__ = '0.0.3'
-
-
+__version__ = '0.0.4'
+FORMATTERS = [SimpleFormatter, HTMLFormatter, PDFFormatter]
 del types_map['.jpe']
 
 
@@ -50,22 +55,34 @@ def main(arguments):
         else:
             skip_list = [s.strip() for s in skip_list.split(',')]
 
-    ArticleTransformer(article_path,
-                       ImageDownloader(
-                           article_path=article_path,
-                           skip_list=skip_list,
-                           skip_all_errors=skip_all,
-                           img_dir_name=arguments.images_dirname,
-                           img_public_path=arguments.images_publicpath,
-                           downloading_timeout=arguments.downloading_timeout,
-                           deduplication=arguments.dedup_with_hash
-                           )
-                       ).run()
+    img_downloader = ImageDownloader(
+        article_path=article_path,
+        skip_list=skip_list,
+        skip_all_errors=skip_all,
+        img_dir_name=arguments.images_dirname,
+        img_public_path=arguments.images_publicpath,
+        downloading_timeout=arguments.downloading_timeout,
+        deduplication=arguments.dedup_with_hash
+    )
+
+    result = ArticleTransformer(article_path, img_downloader).run()
+
+    formatter = [f for f in FORMATTERS if f is not None and f.format == arguments.output_format]
+    assert len(formatter) == 1
+    formatter = formatter[0]
+
+    article_out_path = f'{os.path.splitext(article_path)[0]}.{formatter.format}'
+    print(f'Writing file into "{article_out_path}"...')
+
+    with open(article_out_path, 'wb') as outfile:
+        outfile.write(formatter.write(result))
 
     print('Processing finished successfully...')
 
 
 if __name__ == '__main__':
+    out_format_list = [f.format for f in FORMATTERS if f is not None]
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('article_file_path_or_url', type=str,
                         help='path to the article file in the Markdown format')
@@ -81,6 +98,8 @@ if __name__ == '__main__':
                         help='how many seconds to wait before downloading will be failed')
     parser.add_argument('-D', '--dedup-with-hash', default=False, action='store_true',
                         help='Deduplicate images, using content hash')
+    parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
+                        help='output format')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}', help='return version number')
 
     args = parser.parse_args()
