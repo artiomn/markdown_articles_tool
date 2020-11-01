@@ -56,19 +56,19 @@ optional arguments:
 Example:
 
 ```
-./images_extractor.py nc-1-zfs/article.md
+./markdown_tool.py nc-1-zfs/article.md
 ```
 
 Example 2:
 
 ```
-./images_extractor.py not-nas/sov/article.md -o html -s "http://www.ossec.net/_images/ossec-arch.jpg" -a
+./markdown_tool.py not-nas/sov/article.md -o html -s "http://www.ossec.net/_images/ossec-arch.jpg" -a
 ```
 
 Example 3 (run on a folder):
 
 ```
-find content/ -name "*.md" | xargs -n1 ./images_extractor.py
+find content/ -name "*.md" | xargs -n1 ./markdown_tool.py
 ```
 
 ## Warning
