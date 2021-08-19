@@ -36,7 +36,10 @@ def main(arguments):
 
     article_link = arguments.article_file_path_or_url
     if is_url(article_link):
-        response = download_from_url(article_link, timeout=arguments.downloading_timeout)
+        timeout = arguments.downloading_timeout
+        if timeout < 0:
+            timeout = None
+        response = download_from_url(article_link, timeout=timeout)
         article_path = get_filename_from_url(response)
 
         with open(article_path, 'wb') as article_file:
