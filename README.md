@@ -21,7 +21,8 @@ Syntax:
 ```
 usage: markdown_tool.py [-h] [-s SKIP_LIST] [-d IMAGES_DIRNAME]
                         [-p IMAGES_PUBLICPATH] [-a] [-t DOWNLOADING_TIMEOUT]
-                        [-D] [-R] [-o {md,html,pdf}] [--version]
+                        [-D] [-R] [-o {md,html,pdf}]
+                        [--output-path OUTPUT_PATH] [--version]
                         article_file_path_or_url
 
 Simple script to download images and replace image links in markdown
@@ -50,6 +51,8 @@ optional arguments:
   -R, --remove-source   Remove or replace source file
   -o {md,html,pdf}, --output-format {md,html,pdf}
                         output format
+  --output-path OUTPUT_PATH
+                        article output file name
   --version             return version number
 ```
 
