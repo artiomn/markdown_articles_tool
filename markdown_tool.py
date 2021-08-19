@@ -15,6 +15,7 @@ from pkg.image_downloader import ImageDownloader
 from pkg.www_tools import is_url, get_filename_from_url, download_from_url
 from pkg.formatters.simple import SimpleFormatter
 from pkg.formatters.html import HTMLFormatter
+
 try:
     from pkg.formatters.pdf import PDFFormatter
 except ModuleNotFoundError:
@@ -75,7 +76,7 @@ def main(arguments):
     formatter = formatter[0]
 
     article_file_name = os.path.splitext(article_path)[0]
-    article_out_path = f'{article_file_name}.{formatter.format}'
+    article_out_path = arguments.out_path if arguments.out_path else f'{article_file_name}.{formatter.format}'
     if article_path == article_out_path and not arguments.remove_source:
         article_out_path = f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{formatter.format}'
     print(f'Writing file into "{article_out_path}"...')
@@ -111,6 +112,7 @@ if __name__ == '__main__':
                         help='Remove or replace source file')
     parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
                         help='output format')
+    parser.add_argument('--output-path', type=str, help='article output file name')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}', help='return version number')
 
     args = parser.parse_args()
