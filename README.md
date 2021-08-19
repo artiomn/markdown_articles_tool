@@ -1,8 +1,6 @@
 ![Python application](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20application/badge.svg)
 
-# Markdown articles tool 0.0.4
-
-Version 0.0.4.
+# Markdown articles tool 0.0.5
 
 Tool can be used:
 
