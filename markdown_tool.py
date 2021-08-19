@@ -79,7 +79,7 @@ def main(arguments):
     formatter = formatter[0]
 
     article_file_name = os.path.splitext(article_path)[0]
-    article_out_path = arguments.out_path if arguments.out_path else f'{article_file_name}.{formatter.format}'
+    article_out_path = arguments.output_path if arguments.output_path else f'{article_file_name}.{formatter.format}'
     if article_path == article_out_path and not arguments.remove_source:
         article_out_path = f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{formatter.format}'
     print(f'Writing file into "{article_out_path}"...')
@@ -88,6 +88,7 @@ def main(arguments):
         outfile.write(formatter.write(result))
 
     if arguments.remove_source and article_path != article_out_path:
+        print(f'Removing source file "{article_path}"...')
         os.remove(article_path)
 
     print('Processing finished successfully...')
