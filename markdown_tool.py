@@ -12,7 +12,7 @@ from mimetypes import types_map
 
 from pkg.transformers.md.transformer import ArticleTransformer
 from pkg.image_downloader import ImageDownloader
-from pkg.www_tools import is_url, get_filename_from_url, download_from_url
+from pkg.www_tools import is_url, get_base_url, get_filename_from_url, download_from_url
 from pkg.formatters.simple import SimpleFormatter
 from pkg.formatters.html import HTMLFormatter
 
@@ -64,6 +64,7 @@ def main(arguments):
 
     img_downloader = ImageDownloader(
         article_path=article_path,
+        article_base_url=get_base_url(response),
         skip_list=skip_list,
         skip_all_errors=skip_all,
         img_dir_name=arguments.images_dirname,

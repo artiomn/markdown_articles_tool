@@ -10,12 +10,13 @@ class ImageDownloader:
     "Smart" images downloader.
     """
 
-    def __init__(self, article_path: str, skip_list: Optional[List[str]] = None, skip_all_errors: bool = False,
-                 img_dir_name: str = 'images', img_public_path: str = '', downloading_timeout: float = -1,
-                 deduplication: bool = False):
+    def __init__(self, article_path: str, article_base_url: str = '', skip_list: Optional[List[str]] = None,
+                 skip_all_errors: bool = False, img_dir_name: str = 'images', img_public_path: str = '',
+                 downloading_timeout: float = -1, deduplication: bool = False):
         self._img_dir_name = img_dir_name
         self._img_public_path = img_public_path
         self._article_file_path = article_path
+        self._article_base_url = article_base_url
         self._skip_list = set(skip_list) if skip_list is not None else []
         self._images_dir = os.path.join(os.path.dirname(self._article_file_path), self._img_dir_name)
         self._skip_all_errors = skip_all_errors
@@ -53,8 +54,13 @@ class ImageDownloader:
                 continue
 
             if not is_url(img_url):
-                print(f'Image {img_num + 1} ["{img_url}"] was skipped, because it has incorrect URL...')
-                continue
+                print(f'Image {img_num + 1} ["{img_url}"] has incorrect URL...')
+                if self._article_base_url:
+                    print(f'Trying to add base URL "{self._article_base_url}"...')
+                    img_url = f'{self._article_base_url}/{img_url}'
+                else:
+                    print('Image downloading will be skipped...')
+                    continue
 
             print(f'Downloading image {img_num + 1} of {img_count} from "{img_url}"...')
 

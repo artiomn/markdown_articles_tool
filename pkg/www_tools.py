@@ -68,3 +68,14 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
         else f'{slugify(f_name)}.{slugify(f_ext)}'
 
     return result
+
+
+def get_base_url(req: requests.Response) -> Optional[str]:
+    """
+    Get base URL from url.
+    """
+
+    if req.url.find('/'):
+        return req.url.rsplit('/', 1)[0]
+
+    return None
