@@ -12,4 +12,4 @@ class SimpleFormatter:
 
     @staticmethod
     def write(lines):
-        return ''.join(lines).encode('utf8')
+        return lines.encode('utf8')

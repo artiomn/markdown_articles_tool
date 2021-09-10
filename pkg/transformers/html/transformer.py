@@ -1,74 +1,74 @@
 """
-Images extractor from markdown document.
+Images extractor from HTML document.
 """
-#
-# from lxml import html
-# from typing import List
-#
-#
-# __all__ = ['ArticleTransformer']
-#
-#
-# class ImgExtractor:
-#     def run(self, doc):
-#         """
-#         Find all images in HTML.
-#         """
-#
-#         tree = html.fromstring(doc)
-#         images = tree.xpath('//img/@src')
-#         # links = tree.xpath('//a/@href')
-#
-#         return images
-#
-#
-#
-# class ImgExtExtension(Extension):
-#     def extendMarkdown(self, md, md_globals):
-#         img_ext = ImgExtractor(md)
-#         md.treeprocessors.register(img_ext, 'imgext', 20)
-#
-#
-# class ArticleTransformer:
-#     """
-#     Markdown article transformation class.
-#     """
-#
-#     def __init__(self, article_path: str, image_downloader):
-#         self._image_downloader = image_downloader
-#         self._article_file_path = article_path
-#         self._md_conv = markdown.Markdown(extensions=[ImgExtExtension()])
-#         self._replacement_mapping = {}
-#
-#     def _read_article(self) -> List[str]:
-#         with open(self._article_file_path, 'r') as m_file:
-#             self._md_conv.convert(m_file.read())
-#
-#         print(f'Images links count = {len(self._md_conv.images)}')
-#         images = set(self._md_conv.images)
-#         print(f'Unique images links count = {len(images)}')
-#
-#         return images
-#
-#     def _fix_document_urls(self) -> None:
-#         print('Replacing images urls in the document...')
-#         replacement_mapping = self._replacement_mapping
-#         lines = []
-#         with open(self._article_file_path, 'r') as infile:
-#             for line in infile:
-#                 for src, target in replacement_mapping.items():
-#                     line = line.replace(src, target)
-#                 lines.append(line)
-#
-#         with open(self._article_file_path, 'w') as outfile:
-#             for line in lines:
-#                 outfile.write(line)
-#
-#     def run(self):
-#         """
-#         Run article conversion.
-#         """
-#
-#         self._replacement_mapping = self._image_downloader.download_images(self._read_article())
-#         self._fix_document_urls()
-#
+
+from abc import ABC
+from html.parser import HTMLParser
+from typing import List, TextIO, Set
+
+__all__ = ['ArticleTransformer']
+
+
+class HTMLImageURLGrabber(HTMLParser, ABC):
+    def __init__(self):
+        super().__init__()
+        self._image_urls = []
+
+    def handle_starttag(self, tag, attrs):
+        if 'img' == tag:
+            print('Image was found...')
+            for a in attrs:
+                if 'src' == a[0] and a[1] is not None:
+                    img_url = a[1]
+                    print(f'Image URL: {img_url}...')
+                    self._image_urls.append(img_url)
+                    break
+
+    @property
+    def image_urls(self) -> List[str]:
+        return self._image_urls
+
+
+class ArticleTransformer:
+    """
+    Markdown article transformation class.
+    """
+
+    format = 'html'
+
+    def __init__(self, article_stream: TextIO, image_downloader):
+        self._image_downloader = image_downloader
+        self._article_stream = article_stream
+        self._start_pos = self._article_stream.tell()
+        self._html_images = HTMLImageURLGrabber()
+        self._image_downloader = image_downloader
+        self._replacement_mapping = {}
+
+    def _read_article(self) -> Set[str]:
+        self._html_images.feed(self._article_stream.read())
+        images = self._html_images.image_urls
+        print(f'Images links count = {len(images)}')
+        images = set(images)
+        print(f'Unique images links count = {len(images)}')
+
+        return images
+
+    def _fix_document_urls(self) -> List[str]:
+        print('Replacing images urls in the document...')
+        replacement_mapping = self._replacement_mapping
+        lines = []
+        self._article_stream.seek(self._start_pos)
+        for line in self._article_stream:
+            for src, target in replacement_mapping.items():
+                line = line.replace(src, target)
+            lines.append(line)
+
+        return lines
+
+    def run(self):
+        """
+        Run article conversion.
+        """
+
+        self._replacement_mapping = self._image_downloader.download_images(self._read_article())
+        return self._fix_document_urls()

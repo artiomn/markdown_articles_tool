@@ -19,7 +19,7 @@ class PDFFormatter:
 
     @staticmethod
     def write(lines):
-        return weasyprint.HTML(string=markdown(''.join(lines), output_format='html'),
+        return weasyprint.HTML(string=markdown(lines, output_format='html'),
                                url_fetcher=PDFFormatter._fetcher).write_pdf()
 
         # with BytesIO() as result:

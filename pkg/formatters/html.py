@@ -14,5 +14,5 @@ class HTMLFormatter:
 
     @staticmethod
     def write(lines):
-        md = markdown(''.join(lines), output_format='html')
+        md = markdown(lines, output_format='html')
         return f'<html>\n<head></head>\n<body>\n{md}\n</body>\n</html>'.encode()

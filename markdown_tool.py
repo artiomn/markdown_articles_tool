@@ -5,10 +5,12 @@ Simple script to download images and replace image links in markdown documents.
 """
 
 import argparse
+from io import StringIO
+from itertools import permutations
 import os
 
-from time import strftime
 from mimetypes import types_map
+from time import strftime
 
 from pkg.transformers.md.transformer import ArticleTransformer as MarkdownArticleTransformer
 from pkg.transformers.html.transformer import ArticleTransformer as HTMLArticleTransformer
@@ -23,8 +25,11 @@ except ModuleNotFoundError:
     PDFFormatter = None
 
 
-__version__ = '0.0.5'
+__version__ = '0.0.6'
+
+TRANSFORMERS = [MarkdownArticleTransformer, HTMLArticleTransformer]
 FORMATTERS = [SimpleFormatter, HTMLFormatter, PDFFormatter]
+
 del types_map['.jpe']
 
 
@@ -76,7 +81,17 @@ def main(arguments):
         deduplication=arguments.dedup_with_hash
     )
 
-    result = MarkdownArticleTransformer(article_path, img_downloader).run()
+    transformers = [tr for ifmt in arguments.input_format.split(',')
+                    for tr in TRANSFORMERS if tr is not None and tr.format == ifmt]
+
+    with open(article_path, 'r', encoding='utf8') as article_file:
+        result = StringIO(article_file.read())
+
+    for transformer in transformers:
+        lines = transformer(result, img_downloader).run()
+        result = StringIO(''.join(lines))
+
+    result = result.read()
 
     formatter = [f for f in FORMATTERS if f is not None and f.format == arguments.output_format]
     assert len(formatter) == 1
@@ -99,6 +114,8 @@ def main(arguments):
 
 
 if __name__ == '__main__':
+    in_format_list = [f.format for f in TRANSFORMERS if f is not None]
+    in_format_list = [*in_format_list, *(','.join(i) for i in permutations(in_format_list))]
     out_format_list = [f.format for f in FORMATTERS if f is not None]
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -112,6 +129,8 @@ if __name__ == '__main__':
                         help='skip all incorrect images')
     parser.add_argument('-s', '--skip-list', default=None,
                         help='skip URL\'s from the comma-separated list (or file with a leading \'@\')')
+    parser.add_argument('-i', '--input-format', default='md', choices=in_format_list,
+                        help='input format')
     parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
                         help='output format')
     parser.add_argument('-p', '--images-publicpath', default='',
