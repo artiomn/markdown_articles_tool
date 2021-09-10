@@ -11,7 +11,7 @@ Tool can be used:
 - Convert Markdown documents to:
   * HTML.
   * PDF.
-  * Or save in the plain Markdown
+  * Or save in the plain Markdown.
 
 
 ## Installation

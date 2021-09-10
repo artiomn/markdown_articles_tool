@@ -75,7 +75,7 @@ def get_base_url(req: requests.Response) -> Optional[str]:
     Get base URL from url.
     """
 
-    if req.url.find('/'):
+    if req and req.url.find('/'):
         return req.url.rsplit('/', 1)[0]
 
     return None
