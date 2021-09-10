@@ -22,7 +22,7 @@ except ModuleNotFoundError:
     PDFFormatter = None
 
 
-__version__ = '0.0.4'
+__version__ = '0.0.5'
 FORMATTERS = [SimpleFormatter, HTMLFormatter, PDFFormatter]
 del types_map['.jpe']
 
