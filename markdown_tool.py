@@ -11,6 +11,7 @@ import os
 
 from mimetypes import types_map
 from time import strftime
+from typing import List
 
 from pkg.transformers.md.transformer import ArticleTransformer as MarkdownArticleTransformer
 from pkg.transformers.html.transformer import ArticleTransformer as HTMLArticleTransformer
@@ -31,6 +32,38 @@ TRANSFORMERS = [MarkdownArticleTransformer, HTMLArticleTransformer]
 FORMATTERS = [SimpleFormatter, HTMLFormatter, PDFFormatter]
 
 del types_map['.jpe']
+
+
+def transform_article(article_path: str, input_format_list: List[str], img_downloader: ImageDownloader) -> str:
+    transformers = [tr for ifmt in input_format_list
+                    for tr in TRANSFORMERS if tr is not None and tr.format == ifmt]
+
+    with open(article_path, 'r', encoding='utf8') as article_file:
+        result = StringIO(article_file.read())
+
+    for transformer in transformers:
+        lines = transformer(result, img_downloader).run()
+        result = StringIO(''.join(lines))
+
+    return result.read()
+
+
+def format_article(article_path: str, article_text: str, output_format: str, output_path: str,
+                   remove_source: bool) -> str:
+    formatter = [f for f in FORMATTERS if f is not None and f.format == output_format]
+    assert len(formatter) == 1
+    formatter = formatter[0]
+
+    article_file_name = os.path.splitext(article_path)[0]
+    article_out_path = output_path if output_path else f'{article_file_name}.{formatter.format}'
+    if article_path == article_out_path and not remove_source:
+        article_out_path = f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{formatter.format}'
+    print(f'Writing file into "{article_out_path}"...')
+
+    with open(article_out_path, 'wb') as outfile:
+        outfile.write(formatter.write(article_text))
+
+    return article_out_path
 
 
 def main(arguments):
@@ -76,35 +109,15 @@ def main(arguments):
         skip_list=skip_list,
         skip_all_errors=skip_all,
         img_dir_name=arguments.images_dirname,
-        img_public_path=arguments.images_publicpath,
+        img_public_path=arguments.images_public_path,
         downloading_timeout=arguments.downloading_timeout,
         deduplication=arguments.dedup_with_hash
     )
 
-    transformers = [tr for ifmt in arguments.input_format.split(',')
-                    for tr in TRANSFORMERS if tr is not None and tr.format == ifmt]
+    result = transform_article(article_path, arguments.input_format.split(','), img_downloader)
 
-    with open(article_path, 'r', encoding='utf8') as article_file:
-        result = StringIO(article_file.read())
-
-    for transformer in transformers:
-        lines = transformer(result, img_downloader).run()
-        result = StringIO(''.join(lines))
-
-    result = result.read()
-
-    formatter = [f for f in FORMATTERS if f is not None and f.format == arguments.output_format]
-    assert len(formatter) == 1
-    formatter = formatter[0]
-
-    article_file_name = os.path.splitext(article_path)[0]
-    article_out_path = arguments.output_path if arguments.output_path else f'{article_file_name}.{formatter.format}'
-    if article_path == article_out_path and not arguments.remove_source:
-        article_out_path = f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{formatter.format}'
-    print(f'Writing file into "{article_out_path}"...')
-
-    with open(article_out_path, 'wb') as outfile:
-        outfile.write(formatter.write(result))
+    article_out_path = format_article(article_path, result, arguments.output_format, arguments.output_path,
+                                      arguments.remove_source)
 
     if arguments.remove_source and article_path != article_out_path:
         print(f'Removing source file "{article_path}"...')
