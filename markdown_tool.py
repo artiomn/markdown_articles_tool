@@ -133,13 +133,13 @@ if __name__ == '__main__':
                         help='input format')
     parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
                         help='output format')
-    parser.add_argument('-p', '--images-publicpath', default='',
+    parser.add_argument('-p', '--images-public-path', default='',
                         help='Public path to the folder of downloaded images')
     parser.add_argument('-R', '--remove-source', default=False, action='store_true',
                         help='Remove or replace source file')
     parser.add_argument('-t', '--downloading-timeout', type=float, default=-1,
                         help='how many seconds to wait before downloading will be failed')
-    parser.add_argument('--output-path', type=str, help='article output file name')
+    parser.add_argument('-O', '--output-path', type=str, help='article output file name')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}', help='return version number')
 
     args = parser.parse_args()
