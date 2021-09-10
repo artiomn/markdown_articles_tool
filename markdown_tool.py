@@ -10,7 +10,7 @@ import os
 from time import strftime
 from mimetypes import types_map
 
-from pkg.transformers.md.transformer import ArticleTransformer
+from pkg.transformers.md.transformer import ArticleTransformer as MarkdownArticleTransformer
 from pkg.image_downloader import ImageDownloader
 from pkg.www_tools import is_url, get_base_url, get_filename_from_url, download_from_url
 from pkg.formatters.simple import SimpleFormatter
@@ -41,12 +41,14 @@ def main(arguments):
             timeout = None
         response = download_from_url(article_link, timeout=timeout)
         article_path = get_filename_from_url(response)
+        article_base_url = get_base_url(response)
 
         with open(article_path, 'wb') as article_file:
             article_file.write(response.content)
             article_file.close()
     else:
         article_path = os.path.expanduser(article_link)
+        article_base_url = ''
 
     skip_list = arguments.skip_list
     skip_all = arguments.skip_all_incorrect
@@ -64,7 +66,7 @@ def main(arguments):
 
     img_downloader = ImageDownloader(
         article_path=article_path,
-        article_base_url=get_base_url(response),
+        article_base_url=article_base_url,
         skip_list=skip_list,
         skip_all_errors=skip_all,
         img_dir_name=arguments.images_dirname,
@@ -73,7 +75,7 @@ def main(arguments):
         deduplication=arguments.dedup_with_hash
     )
 
-    result = ArticleTransformer(article_path, img_downloader).run()
+    result = MarkdownArticleTransformer(article_path, img_downloader).run()
 
     formatter = [f for f in FORMATTERS if f is not None and f.format == arguments.output_format]
     assert len(formatter) == 1
