@@ -114,7 +114,7 @@ def main(arguments):
         deduplication=arguments.dedup_with_hash
     )
 
-    result = transform_article(article_path, arguments.input_format.split(','), img_downloader)
+    result = transform_article(article_path, arguments.input_format.split('+'), img_downloader)
 
     article_out_path = format_article(article_path, result, arguments.output_format, arguments.output_path,
                                       arguments.remove_source)
@@ -128,7 +128,7 @@ def main(arguments):
 
 if __name__ == '__main__':
     in_format_list = [f.format for f in TRANSFORMERS if f is not None]
-    in_format_list = [*in_format_list, *(','.join(i) for i in permutations(in_format_list))]
+    in_format_list = [*in_format_list, *('+'.join(i) for i in permutations(in_format_list))]
     out_format_list = [f.format for f in FORMATTERS if f is not None]
 
     parser = argparse.ArgumentParser(description=__doc__)

@@ -14,15 +14,26 @@ Tool can be used:
   * Or save in the plain Markdown
 
 
+## Installation
+
+You need Python 3.7+.
+Run:
+
+```
+git clone "https://github.com/artiomn/markdown_articles_tool"
+pip3 install -r markdown_articles_tool/requirements.txt
+```
+
+
 ## Usage
 
 Syntax:
 
 ```
 usage: markdown_tool.py [-h] [-D] [-d IMAGES_DIRNAME] [-a] [-s SKIP_LIST]
-                        [-i {md,html,md,html,html,md}] [-o {md,html,pdf}]
-                        [-p IMAGES_PUBLICPATH] [-R] [-t DOWNLOADING_TIMEOUT]
-                        [--output-path OUTPUT_PATH] [--version]
+                        [-i {md,html,md+html,html+md}] [-o {md,html,pdf}]
+                        [-p IMAGES_PUBLIC_PATH] [-R] [-t DOWNLOADING_TIMEOUT]
+                        [-O OUTPUT_PATH] [--version]
                         article_file_path_or_url
 
 Simple script to download images and replace image links in markdown
@@ -43,22 +54,22 @@ optional arguments:
   -s SKIP_LIST, --skip-list SKIP_LIST
                         skip URL's from the comma-separated list (or file with
                         a leading '@')
-  -i {md,html,md,html,html,md}, --input-format {md,html,md,html,html,md}
+  -i {md,html,md+html,html+md}, --input-format {md,html,md+html,html+md}
                         input format
   -o {md,html,pdf}, --output-format {md,html,pdf}
                         output format
-  -p IMAGES_PUBLICPATH, --images-publicpath IMAGES_PUBLICPATH
+  -p IMAGES_PUBLIC_PATH, --images-public-path IMAGES_PUBLIC_PATH
                         Public path to the folder of downloaded images
   -R, --remove-source   Remove or replace source file
   -t DOWNLOADING_TIMEOUT, --downloading-timeout DOWNLOADING_TIMEOUT
                         how many seconds to wait before downloading will be
                         failed
-  --output-path OUTPUT_PATH
+  -O OUTPUT_PATH, --output-path OUTPUT_PATH
                         article output file name
   --version             return version number
 ```
 
-Example:
+Example 1:
 
 ```
 ./markdown_tool.py nc-1-zfs/article.md
