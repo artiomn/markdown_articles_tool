@@ -1,6 +1,6 @@
 ![Python application](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20application/badge.svg)
 
-# Markdown articles tool 0.0.6
+# Markdown articles tool 0.0.7
 
 Tool can be used:
 
@@ -16,7 +16,7 @@ Tool can be used:
 
 ## Installation
 
-You need Python 3.7+.
+You need Python 3.7+.  
 Run:
 
 ```
@@ -48,7 +48,9 @@ optional arguments:
   -D, --dedup-with-hash
                         Deduplicate images, using content hash
   -d IMAGES_DIRNAME, --images-dirname IMAGES_DIRNAME
-                        Folder in which to download images
+                        Folder in which to download images (possible
+                        variables: $article_name, $time, $date, $dt,
+                        $base_url)
   -a, --skip-all-incorrect
                         skip all incorrect images
   -s SKIP_LIST, --skip-list SKIP_LIST
@@ -60,6 +62,8 @@ optional arguments:
                         output format
   -p IMAGES_PUBLIC_PATH, --images-public-path IMAGES_PUBLIC_PATH
                         Public path to the folder of downloaded images
+                        (possible variables: $article_name, $time, $date, $dt,
+                        $base_url)
   -R, --remove-source   Remove or replace source file
   -t DOWNLOADING_TIMEOUT, --downloading-timeout DOWNLOADING_TIMEOUT
                         how many seconds to wait before downloading will be

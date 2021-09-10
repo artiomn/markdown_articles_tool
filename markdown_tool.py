@@ -27,7 +27,7 @@ except ModuleNotFoundError:
     PDFFormatter = None
 
 
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 
 TRANSFORMERS = [MarkdownArticleTransformer, HTMLArticleTransformer]
 FORMATTERS = [SimpleFormatter, HTMLFormatter, PDFFormatter]
