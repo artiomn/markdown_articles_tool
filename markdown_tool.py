@@ -35,6 +35,9 @@ del types_map['.jpe']
 
 
 def transform_article(article_path: str, input_format_list: List[str], img_downloader: ImageDownloader) -> str:
+    """
+    Download images and fix URL's.
+    """
     transformers = [tr for ifmt in input_format_list
                     for tr in TRANSFORMERS if tr is not None and tr.format == ifmt]
 
@@ -50,6 +53,9 @@ def transform_article(article_path: str, input_format_list: List[str], img_downl
 
 def format_article(article_path: str, article_text: str, output_format: str, output_path: str,
                    remove_source: bool) -> str:
+    """
+    Save article in the selected format.
+    """
     formatter = [f for f in FORMATTERS if f is not None and f.format == output_format]
     assert len(formatter) == 1
     formatter = formatter[0]

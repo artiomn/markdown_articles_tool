@@ -31,7 +31,7 @@ class HTMLImageURLGrabber(HTMLParser, ABC):
 
 class ArticleTransformer:
     """
-    Markdown article transformation class.
+    HTML article transformation class.
     """
 
     format = 'html'
