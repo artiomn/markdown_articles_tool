@@ -8,6 +8,7 @@ import argparse
 from io import StringIO
 from itertools import permutations
 import os
+from string import Template
 
 from mimetypes import types_map
 from time import strftime
@@ -51,25 +52,32 @@ def transform_article(article_path: str, input_format_list: List[str], img_downl
     return result.read()
 
 
-def format_article(article_path: str, article_text: str, output_format: str, output_path: str,
-                   remove_source: bool) -> str:
-    """
-    Save article in the selected format.
-    """
+def get_formatter(output_format: str):
     formatter = [f for f in FORMATTERS if f is not None and f.format == output_format]
     assert len(formatter) == 1
     formatter = formatter[0]
 
+    return formatter
+
+
+def get_article_out_path(article_path: str, output_path: str, remove_source: bool) -> str:
     article_file_name = os.path.splitext(article_path)[0]
-    article_out_path = output_path if output_path else f'{article_file_name}.{formatter.format}'
+    article_out_path = output_path if output_path else f'{article_file_name}'
     if article_path == article_out_path and not remove_source:
-        article_out_path = f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{formatter.format}'
+        article_out_path = f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}'
+
+    return article_out_path
+
+
+def format_article(article_out_path: str, article_text: str, formatter) -> None:
+    """
+    Save article in the selected format.
+    """
+
     print(f'Writing file into "{article_out_path}"...')
 
     with open(article_out_path, 'wb') as outfile:
         outfile.write(formatter.write(article_text))
-
-    return article_out_path
 
 
 def main(arguments):
@@ -109,21 +117,40 @@ def main(arguments):
         else:
             skip_list = [s.strip() for s in skip_list.split(',')]
 
+    article_formatter = get_formatter(arguments.output_format)
+
+    article_out_filename = get_article_out_path(
+        article_path=article_path,
+        output_path=arguments.output_path,
+        remove_source=arguments.remove_source
+    )
+
+    variables = {
+        'article_name': article_out_filename,
+        'time': strftime('%H%M%S'),
+        'date': strftime('%Y%m%d'),
+        'dt': strftime('%Y%m%d_%H%M%S'),
+        'base_url': article_base_url.lstrip('https://').lstrip('http://')
+    }
+
+    article_out_path = f'article_out_filename.{article_formatter.format}'
+
+    print(f'Image public path: {Template(arguments.images_public_path).safe_substitute(**variables)}')
+
     img_downloader = ImageDownloader(
         article_path=article_path,
         article_base_url=article_base_url,
         skip_list=skip_list,
         skip_all_errors=skip_all,
-        img_dir_name=arguments.images_dirname,
-        img_public_path=arguments.images_public_path,
+        img_dir_name=Template(arguments.images_dirname).safe_substitute(**variables),
+        img_public_path=Template(arguments.images_public_path).safe_substitute(**variables),
         downloading_timeout=arguments.downloading_timeout,
         deduplication=arguments.dedup_with_hash
     )
 
     result = transform_article(article_path, arguments.input_format.split('+'), img_downloader)
 
-    article_out_path = format_article(article_path, result, arguments.output_format, arguments.output_path,
-                                      arguments.remove_source)
+    format_article(article_out_path, result, article_formatter)
 
     if arguments.remove_source and article_path != article_out_path:
         print(f'Removing source file "{article_path}"...')
@@ -143,7 +170,8 @@ if __name__ == '__main__':
     parser.add_argument('-D', '--dedup-with-hash', default=False, action='store_true',
                         help='Deduplicate images, using content hash')
     parser.add_argument('-d', '--images-dirname', default='images',
-                        help='Folder in which to download images')
+                        help='Folder in which to download images '
+                             '(possible variables: $article_name, $time, $date, $dt, $base_url)')
     parser.add_argument('-a', '--skip-all-incorrect', default=False, action='store_true',
                         help='skip all incorrect images')
     parser.add_argument('-s', '--skip-list', default=None,
@@ -153,7 +181,8 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
                         help='output format')
     parser.add_argument('-p', '--images-public-path', default='',
-                        help='Public path to the folder of downloaded images')
+                        help='Public path to the folder of downloaded images '
+                             '(possible variables: $article_name, $time, $date, $dt, $base_url)')
     parser.add_argument('-R', '--remove-source', default=False, action='store_true',
                         help='Remove or replace source file')
     parser.add_argument('-t', '--downloading-timeout', type=float, default=-1,
