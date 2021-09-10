@@ -7,7 +7,7 @@ Simple script to download images and replace image links in markdown documents.
 import argparse
 from io import StringIO
 from itertools import permutations
-import os
+from pathlib import Path
 from string import Template
 
 from mimetypes import types_map
@@ -60,11 +60,12 @@ def get_formatter(output_format: str):
     return formatter
 
 
-def get_article_out_path(article_path: str, output_path: str, remove_source: bool) -> str:
-    article_file_name = os.path.splitext(article_path)[0]
-    article_out_path = output_path if output_path else f'{article_file_name}'
+def get_article_out_path(article_path: Path, output_path: Path, file_format: str, remove_source: bool) -> Path:
+    article_file_name = article_path.stem
+    article_out_path = output_path if output_path else article_path.parent / f'{article_file_name}.{file_format}'
+
     if article_path == article_out_path and not remove_source:
-        article_out_path = f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}'
+        article_out_path = article_path.parent / f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{file_format}'
 
     return article_out_path
 
@@ -93,14 +94,14 @@ def main(arguments):
         if timeout < 0:
             timeout = None
         response = download_from_url(article_link, timeout=timeout)
-        article_path = get_filename_from_url(response)
+        article_path = Path(get_filename_from_url(response))
         article_base_url = get_base_url(response)
 
         with open(article_path, 'wb') as article_file:
             article_file.write(response.content)
             article_file.close()
     else:
-        article_path = os.path.expanduser(article_link)
+        article_path = Path(article_link).expanduser()
         article_base_url = ''
 
     skip_list = arguments.skip_list
@@ -112,28 +113,27 @@ def main(arguments):
         if skip_list.startswith('@'):
             skip_list = skip_list[1:]
             print(f'Reading skip list from a file "{skip_list}"...')
-            with open(os.path.expanduser(skip_list), 'r') as fsl:
+            with open(Path(skip_list).expanduser(), 'r') as fsl:
                 skip_list = [s.strip() for s in fsl.readlines()]
         else:
             skip_list = [s.strip() for s in skip_list.split(',')]
 
     article_formatter = get_formatter(arguments.output_format)
 
-    article_out_filename = get_article_out_path(
+    article_out_path = get_article_out_path(
         article_path=article_path,
-        output_path=arguments.output_path,
+        output_path=Path(arguments.output_path) if arguments.output_path is not None else None,
+        file_format=article_formatter.format,
         remove_source=arguments.remove_source
     )
 
     variables = {
-        'article_name': article_out_filename,
+        'article_name': article_out_path.stem,
         'time': strftime('%H%M%S'),
         'date': strftime('%Y%m%d'),
         'dt': strftime('%Y%m%d_%H%M%S'),
         'base_url': article_base_url.lstrip('https://').lstrip('http://')
     }
-
-    article_out_path = f'article_out_filename.{article_formatter.format}'
 
     print(f'Image public path: {Template(arguments.images_public_path).safe_substitute(**variables)}')
 
@@ -142,8 +142,8 @@ def main(arguments):
         article_base_url=article_base_url,
         skip_list=skip_list,
         skip_all_errors=skip_all,
-        img_dir_name=Template(arguments.images_dirname).safe_substitute(**variables),
-        img_public_path=Template(arguments.images_public_path).safe_substitute(**variables),
+        img_dir_name=Path(Template(arguments.images_dirname).safe_substitute(**variables)),
+        img_public_path=Path(Template(arguments.images_public_path).safe_substitute(**variables)),
         downloading_timeout=arguments.downloading_timeout,
         deduplication=arguments.dedup_with_hash
     )
@@ -154,7 +154,7 @@ def main(arguments):
 
     if arguments.remove_source and article_path != article_out_path:
         print(f'Removing source file "{article_path}"...')
-        os.remove(article_path)
+        Path(article_path).unlink()
 
     print('Processing finished successfully...')
 

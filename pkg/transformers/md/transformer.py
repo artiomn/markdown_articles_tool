@@ -57,7 +57,7 @@ class ArticleTransformer:
         self._article_stream.seek(self._start_pos)
         for line in self._article_stream:
             for src, target in replacement_mapping.items():
-                line = line.replace(src, target)
+                line = line.replace(src, str(target))
             lines.append(line)
 
         return lines
