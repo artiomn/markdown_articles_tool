@@ -91,7 +91,7 @@ class ImageDownloader:
                                                                   img_filename)
 
             real_img_path = images_dir / img_filename
-            replacement_mapping.setdefault(img_url, document_img_path)
+            replacement_mapping.setdefault(img_url, '/'.join(document_img_path.parts))
 
             ImageDownloader._write_image(real_img_path, image_content)
 
