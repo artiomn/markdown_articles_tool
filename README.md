@@ -7,7 +7,7 @@ Tool can be used:
 - To download markdown article with images and replace image links.  
   Find all links to images, download images and fix links in the document.
   Similar images may be deduplicated by content hash.
-- Support images, linked with HTML "\<img\>" tag.
+- Support images, linked with HTML `\<img\>` tag.
 - Convert Markdown documents to:
   * HTML.
   * PDF.
