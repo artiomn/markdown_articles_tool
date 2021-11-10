@@ -2,16 +2,21 @@
 
 # Markdown articles tool 0.0.7
 
+Free command line utility, written in Python, designed to help you manage online and downloaded Markdown documents (e.g., articles).
+The Markdown Articles Tool is available for macOS, Windows, and Linux. 
+
 Tool can be used:
 
-- To download markdown article with images and replace image links.  
-  Find all links to images, download images and fix links in the document.
-  Similar images may be deduplicated by content hash.
+- To download markdown text with images with images and:
+  * Find all links to images, download images and fix links in the document.
+  * Deduplicate similar images by content hash.
 - Support images, linked with HTML `<img>` tag.
 - Convert Markdown documents to:
   * HTML.
   * PDF.
   * Or save in the plain Markdown.
+
+Also, if you want to use separate functions, you can just import the package.
 
 
 ## Installation
