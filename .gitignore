@@ -1,6 +1,9 @@
 # Created by https://www.gitignore.io/api/vim,python
 # Edit at https://www.gitignore.io/?templates=vim,python
 
+*.md
+^README.md
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
