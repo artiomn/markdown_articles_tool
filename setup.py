@@ -1,14 +1,17 @@
 from setuptools import setup
+import pathlib
 
+here = pathlib.Path(__file__).parent.resolve()
+
+requirements = [r for r in (here / 'requirements.txt').read_text(encoding='utf-8').split()
+                if r and not r.lstrip().startswith('#')]
+version = here / 'markdown_tool' / '__version__.py'
+v = compile(version.read_text(encoding='utf-8'), '', 'exec')
+exec(v)
 
 setup(
-    name='markdown_tool',
-    version='0.0.9',
-    packages=['markdown_tool'],
-    url='https://github.com/artiomn/markdown_articles_tool',
-    license='MIT',
-    author='artiom_n',
-    author_email='',
-    install_requires=open('requirements.txt').read().split(),
-    description='Parse markdown article, download images and replace images URL\'s with local paths'
+    install_requires=requirements,
+    scripts=['markdown_tool.py'],
+    version=__version__,
+    zip_safe=False
 )

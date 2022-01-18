@@ -15,8 +15,7 @@ from markdown_tool.image_downloader import DeduplicationVariant
 from markdown_tool.formatters import FORMATTERS
 from markdown_tool.transformers import TRANSFORMERS
 
-
-__version__ = '0.0.8'
+from markdown_tool.__version__ import __version__
 
 
 del types_map['.jpe']

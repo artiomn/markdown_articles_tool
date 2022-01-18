@@ -1,6 +1,6 @@
 ![Python application](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20application/badge.svg)
 
-# Markdown articles tool 0.0.8
+# Markdown articles tool 0.0.9
 
 Free command line utility, written in Python, designed to help you manage online and downloaded Markdown documents (e.g., articles).
 The Markdown Articles Tool is available for macOS, Windows, and Linux. 
@@ -34,7 +34,7 @@ Deduplication can replace not similar images. Probability of this is very low, b
 
 ## Installation
 
-You need Python 3.7+.  
+You need Python 3.8+.
 Run:
 
 ```
