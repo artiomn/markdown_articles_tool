@@ -9,11 +9,11 @@ from itertools import permutations
 
 from mimetypes import types_map
 
-from pkg.article_processor import ArticleProcessor
-from pkg.image_downloader import DeduplicationVariant
+from markdown_tool.article_processor import ArticleProcessor
+from markdown_tool.image_downloader import DeduplicationVariant
 
-from pkg.formatters import FORMATTERS
-from pkg.transformers import TRANSFORMERS
+from markdown_tool.formatters import FORMATTERS
+from markdown_tool.transformers import TRANSFORMERS
 
 
 __version__ = '0.0.8'

@@ -1,6 +1,6 @@
 from io import StringIO
 from typing import Any, List
-from pkg.image_downloader import ImageDownloader
+from markdown_tool.image_downloader import ImageDownloader
 
 
 def transform_article(article_path: str, input_format_list: List[str], transformers_list: List[Any],
