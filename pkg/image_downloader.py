@@ -36,7 +36,7 @@ class ImageDownloader:
                                           NAMES_HASHING - file names will be sha1(image_content).
                                           CONTENT_HASH - first image name will be used.
         :parameter replace_image_names: if True, image names will be replaced with the hash of the content.
-        :parameter process_local_images:
+        :parameter process_local_images: if True, local image files will be processed.
         """
 
         # TODO: rename parameters.

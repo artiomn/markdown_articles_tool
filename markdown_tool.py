@@ -16,7 +16,7 @@ from typing import List
 
 from pkg.transformers.md.transformer import ArticleTransformer as MarkdownArticleTransformer
 from pkg.transformers.html.transformer import ArticleTransformer as HTMLArticleTransformer
-from pkg.image_downloader import ImageDownloader
+from pkg.image_downloader import ImageDownloader, DeduplicationVariant
 from pkg.www_tools import is_url, get_base_url, get_filename_from_url, download_from_url
 from pkg.formatters.simple import SimpleFormatter
 from pkg.formatters.html import HTMLFormatter
@@ -27,7 +27,7 @@ except ModuleNotFoundError:
     PDFFormatter = None
 
 
-__version__ = '0.0.7'
+__version__ = '0.0.8'
 
 TRANSFORMERS = [MarkdownArticleTransformer, HTMLArticleTransformer]
 FORMATTERS = [SimpleFormatter, HTMLFormatter, PDFFormatter]
@@ -70,7 +70,7 @@ def get_article_out_path(article_path: Path, output_path: Path, file_format: str
     return article_out_path
 
 
-def format_article(article_out_path: str, article_text: str, formatter) -> None:
+def format_article(article_out_path: Path, article_text: str, formatter) -> None:
     """
     Save article in the selected format.
     """
@@ -145,7 +145,9 @@ def main(arguments):
         img_dir_name=Path(Template(arguments.images_dirname).safe_substitute(**variables)),
         img_public_path=Path(Template(arguments.images_public_path).safe_substitute(**variables)),
         downloading_timeout=arguments.downloading_timeout,
-        deduplication=arguments.dedup_with_hash
+        deduplication_variant=getattr(DeduplicationVariant, arguments.deduplication_type.upper()),
+        replace_image_names=arguments.replace_image_names,
+        process_local_images=arguments.process_local_images
     )
 
     result = transform_article(article_path, arguments.input_format.split('+'), img_downloader)
@@ -167,8 +169,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('article_file_path_or_url', type=str,
                         help='path to the article file in the Markdown format')
-    parser.add_argument('-D', '--dedup-with-hash', default=False, action='store_true',
-                        help='Deduplicate images, using content hash')
+    parser.add_argument('-D', '--deduplication-type', choices=[i.name.lower() for i in DeduplicationVariant],
+                        default='disabled', help='Deduplicate images, using content hash or SHA1(image_name)')
     parser.add_argument('-d', '--images-dirname', default='images',
                         help='Folder in which to download images '
                              '(possible variables: $article_name, $time, $date, $dt, $base_url)')
@@ -178,6 +180,10 @@ if __name__ == '__main__':
                         help='skip URL\'s from the comma-separated list (or file with a leading \'@\')')
     parser.add_argument('-i', '--input-format', default='md', choices=in_format_list,
                         help='input format')
+    parser.add_argument('-l', '--process-local-images', default=False, action='store_true',
+                        help='Process local images')
+    parser.add_argument('-n', '--replace-image-names', default=False, action='store_true',
+                        help='Replace image names, using content hash')
     parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
                         help='output format')
     parser.add_argument('-p', '--images-public-path', default='',
