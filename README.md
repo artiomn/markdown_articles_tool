@@ -48,7 +48,9 @@ pip3 install -r markdown_articles_tool/requirements.txt
 Syntax:
 
 ```
-usage: markdown_tool.py [-h] [-D {disabled,names_hashing,content_hash}] [-d IMAGES_DIRNAME] [-a] [-s SKIP_LIST] [-i {md,html,md+html,html+md}] [-l] [-n] [-o {md,html}] [-p IMAGES_PUBLIC_PATH] [-R] [-t DOWNLOADING_TIMEOUT] [-O OUTPUT_PATH] [--version] article_file_path_or_url
+usage: markdown_tool.py [-h] [-D {disabled,names_hashing,content_hash}] [-d IMAGES_DIRNAME] [-a] [-s SKIP_LIST]
+       [-i {md,html,md+html,html+md}] [-l] [-n] [-o {md,html}] [-p IMAGES_PUBLIC_PATH] [-R]
+       [-t DOWNLOADING_TIMEOUT] [-O OUTPUT_PATH] [--version] article_file_path_or_url
 
 Script to download images and replace image links in markdown documents.
 
