@@ -12,6 +12,7 @@ exec(v)
 setup(
     install_requires=requirements,
     scripts=['markdown_tool.py'],
-    version=__version__,
+    # flake8: ignore=F821
+    version=__version__,  # noqa
     zip_safe=False
 )
