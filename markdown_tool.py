@@ -9,13 +9,13 @@ from itertools import permutations
 
 from mimetypes import types_map
 
-from markdown_tool.article_processor import ArticleProcessor
-from markdown_tool.image_downloader import DeduplicationVariant
+from markdown_toolset.article_processor import ArticleProcessor
+from markdown_toolset.image_downloader import DeduplicationVariant
 
-from markdown_tool.formatters import FORMATTERS
-from markdown_tool.transformers import TRANSFORMERS
+from markdown_toolset.formatters import FORMATTERS
+from markdown_toolset.transformers import TRANSFORMERS
 
-from markdown_tool.__version__ import __version__
+from markdown_toolset.__version__ import __version__
 
 
 del types_map['.jpe']

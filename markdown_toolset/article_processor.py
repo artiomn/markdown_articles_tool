@@ -3,10 +3,10 @@ from string import Template
 from time import strftime
 from typing import Union, List
 
-from markdown_tool.www_tools import is_url, download_from_url, get_filename_from_url, get_base_url
-from markdown_tool.image_downloader import ImageDownloader, DeduplicationVariant
-from markdown_tool.formatters import FORMATTERS, get_formatter, format_article
-from markdown_tool.transformers import TRANSFORMERS, transform_article
+from .www_tools import is_url, download_from_url, get_filename_from_url, get_base_url
+from .image_downloader import ImageDownloader, DeduplicationVariant
+from .formatters import FORMATTERS, get_formatter, format_article
+from .transformers import TRANSFORMERS, transform_article
 
 
 class ArticleProcessor:

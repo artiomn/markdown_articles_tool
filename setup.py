@@ -5,7 +5,7 @@ here = pathlib.Path(__file__).parent.resolve()
 
 requirements = [r for r in (here / 'requirements.txt').read_text(encoding='utf-8').split()
                 if r and not r.lstrip().startswith('#')]
-version = here / 'markdown_tool' / '__version__.py'
+version = here / 'markdown_toolset' / '__version__.py'
 v = compile(version.read_text(encoding='utf-8'), '', 'exec')
 exec(v)
 
