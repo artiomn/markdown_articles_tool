@@ -22,7 +22,7 @@ class ImageDownloader:
                  skip_all_errors: bool = False, img_dir_name: Path = Path('images'), img_public_path: Path = Path(''),
                  downloading_timeout: float = -1,
                  deduplication_variant: DeduplicationVariant = DeduplicationVariant.DISABLED,
-                 replace_image_names: bool = False, process_local_images: bool = False):
+                 process_local_images: bool = False):
         """
         :parameter article_path: path to the article file.
         :parameter article_base_url: URL to download article.
@@ -35,7 +35,6 @@ class ImageDownloader:
         :parameter deduplication_variant: type of the deduplication:
                                           NAMES_HASHING - file names will be sha1(image_content).
                                           CONTENT_HASH - first image name will be used.
-        :parameter replace_image_names: if True, image names will be replaced with the hash of the content.
         :parameter process_local_images: if True, local image files will be processed.
         """
 
@@ -49,7 +48,6 @@ class ImageDownloader:
         self._skip_all_errors = skip_all_errors
         self._downloading_timeout = downloading_timeout if downloading_timeout > 0 else None
         self._deduplication_variant = deduplication_variant
-        self._replace_image_names = replace_image_names
         self._process_local_images = process_local_images
 
     def download_images(self, images: List[str]) -> dict:

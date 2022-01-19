@@ -5,80 +5,20 @@ Simple script to download images and replace image links in markdown documents.
 """
 
 import argparse
-from io import StringIO
 from itertools import permutations
-from pathlib import Path
-from string import Template
 
 from mimetypes import types_map
-from time import strftime
-from typing import List
 
-from pkg.transformers.md.transformer import ArticleTransformer as MarkdownArticleTransformer
-from pkg.transformers.html.transformer import ArticleTransformer as HTMLArticleTransformer
-from pkg.image_downloader import ImageDownloader, DeduplicationVariant
-from pkg.www_tools import is_url, get_base_url, get_filename_from_url, download_from_url
-from pkg.formatters.simple import SimpleFormatter
-from pkg.formatters.html import HTMLFormatter
+from markdown_toolset.article_processor import ArticleProcessor
+from markdown_toolset.image_downloader import DeduplicationVariant
 
-try:
-    from pkg.formatters.pdf import PDFFormatter
-except ModuleNotFoundError:
-    PDFFormatter = None
+from markdown_toolset.formatters import FORMATTERS
+from markdown_toolset.transformers import TRANSFORMERS
 
+from markdown_toolset.__version__ import __version__
 
-__version__ = '0.0.8'
-
-TRANSFORMERS = [MarkdownArticleTransformer, HTMLArticleTransformer]
-FORMATTERS = [SimpleFormatter, HTMLFormatter, PDFFormatter]
 
 del types_map['.jpe']
-
-
-def transform_article(article_path: str, input_format_list: List[str], img_downloader: ImageDownloader) -> str:
-    """
-    Download images and fix URL's.
-    """
-    transformers = [tr for ifmt in input_format_list
-                    for tr in TRANSFORMERS if tr is not None and tr.format == ifmt]
-
-    with open(article_path, 'r', encoding='utf8') as article_file:
-        result = StringIO(article_file.read())
-
-    for transformer in transformers:
-        lines = transformer(result, img_downloader).run()
-        result = StringIO(''.join(lines))
-
-    return result.read()
-
-
-def get_formatter(output_format: str):
-    formatter = [f for f in FORMATTERS if f is not None and f.format == output_format]
-    assert len(formatter) == 1
-    formatter = formatter[0]
-
-    return formatter
-
-
-def get_article_out_path(article_path: Path, output_path: Path, file_format: str, remove_source: bool) -> Path:
-    article_file_name = article_path.stem
-    article_out_path = output_path if output_path else article_path.parent / f'{article_file_name}.{file_format}'
-
-    if article_path == article_out_path and not remove_source:
-        article_out_path = article_path.parent / f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{file_format}'
-
-    return article_out_path
-
-
-def format_article(article_out_path: Path, article_text: str, formatter) -> None:
-    """
-    Save article in the selected format.
-    """
-
-    print(f'Writing file into "{article_out_path}"...')
-
-    with open(article_out_path, 'wb') as outfile:
-        outfile.write(formatter.write(article_text))
 
 
 def main(arguments):
@@ -88,75 +28,20 @@ def main(arguments):
 
     print(f'Markdown tool version {__version__} started...')
 
-    article_link = arguments.article_file_path_or_url
-    if is_url(article_link):
-        timeout = arguments.downloading_timeout
-        if timeout < 0:
-            timeout = None
-        response = download_from_url(article_link, timeout=timeout)
-        article_path = Path(get_filename_from_url(response))
-        article_base_url = get_base_url(response)
+    processor = ArticleProcessor(skip_list=arguments.skip_list,
+                                 article_file_path_or_url=arguments.article_file_path_or_url,
+                                 downloading_timeout=arguments.downloading_timeout,
+                                 output_format=arguments.output_format,
+                                 output_path=arguments.output_path,
+                                 remove_source=arguments.remove_source,
+                                 images_public_path=arguments.images_public_path,
+                                 input_formats=arguments.input_format.split('+'),
+                                 skip_all_incorrect=arguments.skip_all_incorrect,
+                                 deduplication_type=getattr(DeduplicationVariant, arguments.deduplication_type.upper()),
+                                 process_local_images=arguments.process_local_images,
+                                 images_dirname=arguments.images_dirname)
 
-        with open(article_path, 'wb') as article_file:
-            article_file.write(response.content)
-            article_file.close()
-    else:
-        article_path = Path(article_link).expanduser()
-        article_base_url = ''
-
-    skip_list = arguments.skip_list
-    skip_all = arguments.skip_all_incorrect
-
-    print(f'File "{article_path}" will be processed...')
-
-    if isinstance(skip_list, str):
-        if skip_list.startswith('@'):
-            skip_list = skip_list[1:]
-            print(f'Reading skip list from a file "{skip_list}"...')
-            with open(Path(skip_list).expanduser(), 'r') as fsl:
-                skip_list = [s.strip() for s in fsl.readlines()]
-        else:
-            skip_list = [s.strip() for s in skip_list.split(',')]
-
-    article_formatter = get_formatter(arguments.output_format)
-
-    article_out_path = get_article_out_path(
-        article_path=article_path,
-        output_path=Path(arguments.output_path) if arguments.output_path is not None else None,
-        file_format=article_formatter.format,
-        remove_source=arguments.remove_source
-    )
-
-    variables = {
-        'article_name': article_out_path.stem,
-        'time': strftime('%H%M%S'),
-        'date': strftime('%Y%m%d'),
-        'dt': strftime('%Y%m%d_%H%M%S'),
-        'base_url': article_base_url.lstrip('https://').lstrip('http://')
-    }
-
-    print(f'Image public path: {Template(arguments.images_public_path).safe_substitute(**variables)}')
-
-    img_downloader = ImageDownloader(
-        article_path=article_path,
-        article_base_url=article_base_url,
-        skip_list=skip_list,
-        skip_all_errors=skip_all,
-        img_dir_name=Path(Template(arguments.images_dirname).safe_substitute(**variables)),
-        img_public_path=Path(Template(arguments.images_public_path).safe_substitute(**variables)),
-        downloading_timeout=arguments.downloading_timeout,
-        deduplication_variant=getattr(DeduplicationVariant, arguments.deduplication_type.upper()),
-        replace_image_names=arguments.replace_image_names,
-        process_local_images=arguments.process_local_images
-    )
-
-    result = transform_article(article_path, arguments.input_format.split('+'), img_downloader)
-
-    format_article(article_out_path, result, article_formatter)
-
-    if arguments.remove_source and article_path != article_out_path:
-        print(f'Removing source file "{article_path}"...')
-        Path(article_path).unlink()
+    processor.process()
 
     print('Processing finished successfully...')
 
