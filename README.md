@@ -39,12 +39,20 @@ Deduplication can replace not similar images. Probability of this is very low, b
 
 ## Installation
 
+### From the repository
+
 You need Python 3.8+.
 Run:
 
 ```
 git clone "https://github.com/artiomn/markdown_articles_tool"
 pip3 install -r markdown_articles_tool/requirements.txt
+```
+
+### From the [PIP](https://pypi.org/project/markdown-tool/)
+
+```
+pip3 install markdown-tool
 ```
 
 
