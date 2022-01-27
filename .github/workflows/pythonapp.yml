@@ -43,7 +43,7 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
-        password: ${{ secrets.PYPI_MARKDOWN_TOOL_API_TOKEN }}
+        password: ${{ secrets.PYPI_API_TOKEN }}
         skip_existing: true
-        verbose: true
+        print_hash: true
 
