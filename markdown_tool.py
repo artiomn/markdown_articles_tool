@@ -6,6 +6,7 @@ Simple script to download images and replace image links in markdown documents.
 
 import argparse
 from itertools import permutations
+import logging
 
 from mimetypes import types_map
 
@@ -25,6 +26,9 @@ def main(arguments):
     """
     Entrypoint.
     """
+
+    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%d.%m.%Y %H:%M:%S',
+                        level='DEBUG' if arguments.verbose else 'INFO')
 
     print(f'Markdown tool version {__version__} started...')
 
@@ -79,6 +83,8 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--downloading-timeout', type=float, default=-1,
                         help='how many seconds to wait before downloading will be failed')
     parser.add_argument('-O', '--output-path', type=str, help='article output file name')
+    parser.add_argument('--verbose', '-v', default=False, action='store_true',
+                        help='More verbose logging')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}', help='return version number')
 
     args = parser.parse_args()

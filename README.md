@@ -1,11 +1,11 @@
-[![Python application](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20application/badge.svg)](https://github.com/artiomn/markdown_articles_tool/actions/)
+[![Python package](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20package/badge.svg)](https://github.com/artiomn/markdown_articles_tool/actions/)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Stargazers](https://img.shields.io/github/stars/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/stargazers)
 [![Forks](https://img.shields.io/github/forks/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/network/members)
 [![Latest Release](https://img.shields.io/github/v/release/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/releases)
 
 
-# Markdown articles tool 0.0.9
+# Markdown articles tool 0.1.0
 
 Free command line utility, written in Python, designed to help you manage online and downloaded Markdown documents (e.g., articles).
 The Markdown Articles Tool is available for macOS, Windows, and Linux. 

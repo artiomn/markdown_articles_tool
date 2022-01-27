@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Any, List
 
@@ -15,7 +16,7 @@ def format_article(article_out_path: Path, article_text: str, formatter) -> None
     Save article in the selected format.
     """
 
-    print(f'Writing file into "{article_out_path}"...')
+    logging.info('Writing file into "%s"...', article_out_path)
 
     with open(article_out_path, 'wb') as outfile:
         outfile.write(formatter.write(article_text))

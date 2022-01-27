@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from string import Template
 from time import strftime
@@ -34,7 +35,7 @@ class ArticleProcessor:
         skip_list = self._process_skip_list()
         article_path, article_base_url = self._get_article()
 
-        print(f'File "{article_path}" will be processed...')
+        logging.info('File "%s" will be processed...', article_path)
 
         article_formatter = get_formatter(self._output_format, FORMATTERS)
 
@@ -52,7 +53,7 @@ class ArticleProcessor:
             'base_url': article_base_url.lstrip('https://').lstrip('http://')
         }
 
-        print(f'Image public path: {Template(self._images_public_path).safe_substitute(**variables)}')
+        logging.info('Image public path: %s', Template(self._images_public_path).safe_substitute(**variables))
 
         img_downloader = ImageDownloader(
             article_path=article_path,
@@ -70,7 +71,7 @@ class ArticleProcessor:
         format_article(article_out_path, result, article_formatter)
 
         if self._remove_source and article_path != article_out_path:
-            print(f'Removing source file "{article_path}"...')
+            logging.info('Removing source file "%s"...', article_path)
             Path(article_path).unlink()
 
     def _process_skip_list(self):
@@ -79,7 +80,7 @@ class ArticleProcessor:
         if isinstance(skip_list, str):
             if skip_list.startswith('@'):
                 skip_list = skip_list[1:]
-                print(f'Reading skip list from a file "{skip_list}"...')
+                logging.info('Reading skip list from a file "%s"...', skip_list)
                 with open(Path(skip_list).expanduser(), 'r') as fsl:
                     skip_list = [s.strip() for s in fsl.readlines()]
             else:
