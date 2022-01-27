@@ -39,9 +39,9 @@ jobs:
     - name: Build
       run: python -m build .
     - name: Publish package to the PyPI
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+#      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
-#        skip_existing: true
+        skip_existing: true
