@@ -1,6 +1,7 @@
 """
 Some functions useful for the working with URLs and network.
 """
+import logging
 
 import requests
 from typing import Optional
@@ -37,7 +38,7 @@ def download_from_url(url: str, timeout=None):
     try:
         response = requests.get(url, allow_redirects=True, timeout=timeout, headers=NECESSARY_HEADERS)
     except requests.exceptions.SSLError:
-        print('Incorrect SSL certificate, trying to download without verifying...')
+        logging.warning('Incorrect SSL certificate, trying to download without verifying...')
         response = requests.get(url, allow_redirects=True, verify=False,
                                 timeout=timeout, headers=NECESSARY_HEADERS)
 

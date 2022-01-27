@@ -1,6 +1,7 @@
 """
 Images extractor from markdown document.
 """
+import logging
 
 import markdown
 from markdown.treeprocessors import Treeprocessor
@@ -44,14 +45,14 @@ class ArticleTransformer:
 
     def _read_article(self) -> Set[str]:
         self._md_conv.convert(self._article_stream.read())
-        print(f'Images links count = {len(self._md_conv.images)}')
+        logging.info('Images links count = %d', len(self._md_conv.images))
         images = set(self._md_conv.images)
-        print(f'Unique images links count = {len(images)}')
+        logging.debug('Unique images links count = %d', len(images))
 
         return images
 
     def _fix_document_urls(self) -> List[str]:
-        print('Replacing images urls in the document...')
+        logging.debug('Replacing images urls in the document...')
         replacement_mapping = self._replacement_mapping
         lines = []
         self._article_stream.seek(self._start_pos)

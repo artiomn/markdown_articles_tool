@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 import hashlib
 from pathlib import Path
@@ -76,18 +77,17 @@ class ImageDownloader:
             assert image_url not in replacement_mapping.keys(), f'BUG: already downloaded image "{image_url}"...'
 
             if image_url in skip_list:
-                # TODO: Replace with logging.
-                print(f'Image {image_num + 1} ["{image_url}"] was skipped, because it\'s in the skip list...')
+                logging.debug('Image %d ["%s"] was skipped, because it\'s in the skip list...', image_num + 1, image_url)
                 continue
 
             image_path_is_url = is_url(image_url)
             if not image_path_is_url and not self._process_local_images:
-                print(f'Image {image_num + 1} ["{image_url}"] has incorrect URL...')
+                logging.warning('Image %d ["%s"] has incorrect URL...', image_num + 1, image_url)
                 if self._article_base_url:
-                    print(f'Trying to add base URL "{self._article_base_url}"...')
+                    logging.debug('Trying to add base URL "%s"...', self._article_base_url)
                     image_url = f'{self._article_base_url}/{image_url}'
                 else:
-                    print('Image downloading will be skipped...')
+                    logging.info('Image downloading will be skipped...')
                     continue
 
             try:
@@ -96,8 +96,9 @@ class ImageDownloader:
                     else ImageDownloader._get_local_image(Path(image_url))
             except Exception as e:
                 if self._skip_all_errors:
-                    print(f'Warning: can\'t get image {image_num + 1}, error: [{str(e)}], '
-                          'but processing will be continued, because `skip_all_errors` flag is set')
+                    logging.warning('Can\'t get image %d, error: [%s], '
+                                    'but processing will be continued, because `skip_all_errors` flag is set',
+                                    image_num + 1, str(e))
                     continue
                 raise
 
@@ -130,7 +131,7 @@ class ImageDownloader:
         return replacement_mapping
 
     def _get_remote_image(self, image_url: str, img_num: int, img_count: int):
-        print(f'Downloading image {img_num + 1} of {img_count} from "{image_url}"...')
+        logging.info('Downloading image %d of {img_count} from "%s"...', img_num + 1, image_url)
         img_response = download_from_url(image_url, self._downloading_timeout)
 
         return get_filename_from_url(img_response), img_response.content
@@ -149,7 +150,7 @@ class ImageDownloader:
         """
 
         # TODO: check if image already exists.
-        print(f'Image will be written to the file "{image_path}"...')
+        logging.info('Image will be written to the file "%s"...', image_path)
         with open(image_path, 'wb') as image_file:
             image_file.write(data)
             image_file.close()
