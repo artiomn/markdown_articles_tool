@@ -1,4 +1,9 @@
 ![Python application](https://github.com/artiomn/markdown_images_downloader/workflows/Python%20application/badge.svg)
+[![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+[![Stargazers](https://img.shields.io/github/stars/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/stargazers)
+[![Forks](https://img.shields.io/github/forks/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/network/members)
+[![Latest Release](https://img.shields.io/github/v/release/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/releases)
+
 
 # Markdown articles tool 0.0.8
 
@@ -34,12 +39,20 @@ Deduplication can replace not similar images. Probability of this is very low, b
 
 ## Installation
 
+### From the repository
+
 You need Python 3.8+.
 Run:
 
 ```
 git clone "https://github.com/artiomn/markdown_articles_tool"
 pip3 install -r markdown_articles_tool/requirements.txt
+```
+
+### From the [PIP](https://pypi.org/project/markdown-tool/)
+
+```
+pip3 install markdown-tool
 ```
 
 
