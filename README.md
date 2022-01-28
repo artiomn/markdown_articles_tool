@@ -61,9 +61,12 @@ pip3 install markdown-tool
 Syntax:
 
 ```
-usage: markdown_tool.py [-h] [-D {disabled,names_hashing,content_hash}] [-d IMAGES_DIRNAME] [-a] [-s SKIP_LIST] [-i {md,html,md+html,html+md}] [-l] [-n] [-o {md,html}] [-p IMAGES_PUBLIC_PATH] [-R] [-t DOWNLOADING_TIMEOUT] [-O OUTPUT_PATH] [--version] article_file_path_or_url
+usage: markdown_tool.py [-h] [-D {disabled,names_hashing,content_hash}] [-d IMAGES_DIRNAME] [-a] [-s SKIP_LIST]
+                        [-i {md,html,md+html,html+md}] [-l] [-n] [-o {md,html,pdf}] [-p IMAGES_PUBLIC_PATH] [-R]
+                        [-t DOWNLOADING_TIMEOUT] [-O OUTPUT_PATH] [--verbose] [--version]
+                        article_file_path_or_url
 
-Script to download images and replace image links in markdown documents.
+Simple script to download images and replace image links in markdown documents.
 
 positional arguments:
   article_file_path_or_url
@@ -85,7 +88,7 @@ optional arguments:
                         Process local images
   -n, --replace-image-names
                         Replace image names, using content hash
-  -o {md,html}, --output-format {md,html}
+  -o {md,html,pdf}, --output-format {md,html,pdf}
                         output format
   -p IMAGES_PUBLIC_PATH, --images-public-path IMAGES_PUBLIC_PATH
                         Public path to the folder of downloaded images (possible variables: $article_name, $time, $date, $dt, $base_url)
@@ -94,6 +97,7 @@ optional arguments:
                         how many seconds to wait before downloading will be failed
   -O OUTPUT_PATH, --output-path OUTPUT_PATH
                         article output file name
+  --verbose, -v         More verbose logging
   --version             return version number
 ```
 
