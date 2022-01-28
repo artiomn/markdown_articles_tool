@@ -5,9 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, releases ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, releases ]
 
 jobs:
   build:
@@ -39,7 +39,7 @@ jobs:
     - name: Build
       run: python -m build .
     - name: Publish package to the PyPI
-#      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      if: startsWith(github.head_ref, 'releases/')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
