@@ -35,6 +35,8 @@ def download_from_url(url: str, timeout=None):
     :param timeout: timeout before fail.
     """
 
+    url = url.split()[0]
+
     try:
         response = requests.get(url, allow_redirects=True, timeout=timeout, headers=NECESSARY_HEADERS)
     except requests.exceptions.SSLError:
