@@ -1,26 +1,38 @@
 import hashlib
+import logging
+from io import BytesIO
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
 
 from .deduplicator import Deduplicator
+from ..string_tools import is_binary_same
 
 
 class ContentHashDeduplicator(Deduplicator):
-    def __init__(self, img_dir_name: Path, img_public_path: Path):
+    """
+    Reliable images deduplicator using content hash.
+    """
+
+    def __init__(self, img_dir_name: Path, img_public_path: Optional[Path]):
         self._hash_to_path_mapping = {}
         self._img_dir_name = img_dir_name
         self._img_public_path = img_public_path
 
     def deduplicate(self, image_url, image_filename, image_content, replacement_mapping) -> Tuple[bool, str]:
-        # TODO: process collisions (possibly).
         new_content_hash = hashlib.sha256(image_content).digest()
         existed_file_name = self._hash_to_path_mapping.get(new_content_hash)
+
         if existed_file_name is not None:
-            img_filename = existed_file_name
-            document_img_path = (self._img_public_path or self._img_dir_name) / img_filename
-            replacement_mapping.setdefault(image_url, document_img_path)
-            return False, img_filename
-        else:
-            self._hash_to_path_mapping[new_content_hash] = image_filename
+            document_img_path = (self._img_public_path if self._img_public_path else self._img_dir_name)\
+                / existed_file_name
+            with open(document_img_path, 'rb') as cur_image:
+                # Test for the collisions prevention.
+                if is_binary_same(BytesIO(image_content), cur_image):
+                    logging.debug('Images with the names "%s" and "%s" are similar', existed_file_name, image_filename)
+                    img_filename = existed_file_name
+                    replacement_mapping.setdefault(image_url, document_img_path)
+                    return False, img_filename
+
+        self._hash_to_path_mapping[new_content_hash] = image_filename
 
         return True, image_filename

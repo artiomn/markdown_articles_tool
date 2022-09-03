@@ -62,10 +62,11 @@ class ArticleProcessor:
             'base_url': article_base_url.lstrip('https://').lstrip('http://')
         }
 
-        logging.info('Image public path: %s', Template(self._images_public_path).safe_substitute(**variables))
+        image_public_path = Template(self._images_public_path).safe_substitute(**variables)
+        logging.info('Image public path: %s', image_public_path)
 
         image_dir_name = Path(Template(self._images_dirname).safe_substitute(**variables))
-        image_public_path = Path(Template(self._images_public_path).safe_substitute(**variables))
+        image_public_path = None if not image_public_path else Path(image_public_path)
 
         deduplicator = None
 

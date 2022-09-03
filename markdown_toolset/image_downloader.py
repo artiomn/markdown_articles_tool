@@ -14,7 +14,8 @@ class ImageDownloader:
 
     # TODO: many parameters - refactor this.
     def __init__(self, article_path: Path, article_base_url: str = '', skip_list: Optional[List[str]] = None,
-                 skip_all_errors: bool = False, img_dir_name: Path = Path('images'), img_public_path: Path = Path(''),
+                 skip_all_errors: bool = False, img_dir_name: Path = Path('images'),
+                 img_public_path: Optional[Path] = None,
                  downloading_timeout: float = -1,
                  deduplicator: Optional[Deduplicator] = None,
                  process_local_images: bool = False):
@@ -97,7 +98,7 @@ class ImageDownloader:
                 if not result:
                     continue
 
-            document_img_path = (self._img_public_path or self._img_dir_name) / image_filename
+            document_img_path = self._get_document_img_path(image_filename)
             image_filename, document_img_path = self._correct_paths(replacement_mapping, document_img_path, image_url,
                                                                     image_filename)
 
@@ -107,6 +108,9 @@ class ImageDownloader:
             ImageDownloader._write_image(real_image_path, image_content)
 
         return replacement_mapping
+
+    def _get_document_img_path(self, image_filename):
+        return (self._img_public_path if self._img_public_path is not None else self._img_dir_name) / image_filename
 
     def _get_remote_image(self, image_url: str, img_num: int, img_count: int):
         logging.info('Downloading image %d of %d from "%s"...', img_num + 1, img_count, image_url)
@@ -142,7 +146,7 @@ class ImageDownloader:
         for url, path in replacement_mapping.items():
             if document_img_path == path and img_url != url:
                 image_filename = f'{hashlib.md5(img_url.encode()).hexdigest()}_{image_filename}'
-                document_img_path = (self._img_public_path or self._img_dir_name) / image_filename
+                document_img_path = self._get_document_img_path(image_filename)
                 break
 
         return image_filename, document_img_path
