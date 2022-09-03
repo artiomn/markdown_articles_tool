@@ -122,4 +122,12 @@ find content/ -name "*.md" | xargs -n1 ./markdown_tool.py
 
 # Internals
 
-Tools is a pipeline, which get Markdown form the source and process them, using blocks.
+Tools is a pipeline, which get Markdown form the source and process them, using blocks:
+
+- Source to download article.
+- `ImageDownloader` to download every image.
+  Inside may be used image deduplicators blocks applied to the image.
+- Transform article file, i.e. fix images URLs.
+- Format article to the specific format (Markdown, HTML, PDF, etc.), using selected formatters.
+
+`ArticleProcessor` clas is a strategy, applies blocks, based on the parameters (from the CLI, for example).
