@@ -10,8 +10,7 @@ import logging
 
 from mimetypes import types_map
 
-from markdown_toolset.article_processor import ArticleProcessor
-from markdown_toolset.image_downloader import DeduplicationVariant
+from markdown_toolset.article_processor import ArticleProcessor, DeduplicationVariant
 
 from markdown_toolset.formatters import FORMATTERS
 from markdown_toolset.transformers import TRANSFORMERS
@@ -78,6 +77,8 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--images-public-path', default='',
                         help='Public path to the folder of downloaded images '
                              '(possible variables: $article_name, $time, $date, $dt, $base_url)')
+    parser.add_argument('-P', '--prepend-images-with-path', default=False, action='store_true',
+                        help='')
     parser.add_argument('-R', '--remove-source', default=False, action='store_true',
                         help='Remove or replace source file')
     parser.add_argument('-t', '--downloading-timeout', type=float, default=-1,

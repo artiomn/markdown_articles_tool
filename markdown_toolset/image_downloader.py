@@ -1,16 +1,10 @@
 import logging
-from enum import Enum
 import hashlib
 from pathlib import Path
 from typing import Optional, List
 
+from .deduplicators.deduplicator import Deduplicator
 from .www_tools import is_url, get_filename_from_url, download_from_url
-
-
-class DeduplicationVariant(Enum):
-    DISABLED = 0,
-    NAMES_HASHING = 1,
-    CONTENT_HASH = 2
 
 
 class ImageDownloader:
@@ -22,7 +16,7 @@ class ImageDownloader:
     def __init__(self, article_path: Path, article_base_url: str = '', skip_list: Optional[List[str]] = None,
                  skip_all_errors: bool = False, img_dir_name: Path = Path('images'), img_public_path: Path = Path(''),
                  downloading_timeout: float = -1,
-                 deduplication_variant: DeduplicationVariant = DeduplicationVariant.DISABLED,
+                 deduplicator: Optional[Deduplicator] = None,
                  process_local_images: bool = False):
         """
         :parameter article_path: path to the article file.
@@ -33,9 +27,7 @@ class ImageDownloader:
         :parameter img_public_path: if set, will be used in the document instead of `img_dir_name`.
         :parameter downloading_timeout: if timeout =< 0 - infinite wait for the image downloading, otherwise wait for
                                         `downloading_timeout` seconds.
-        :parameter deduplication_variant: type of the deduplication:
-                                          NAMES_HASHING - file names will be sha1(image_content).
-                                          CONTENT_HASH - first image name will be used.
+        :parameter deduplicator: file deduplicator object.
         :parameter process_local_images: if True, local image files will be processed.
         """
 
@@ -48,8 +40,8 @@ class ImageDownloader:
         self._images_dir = self._article_file_path.parent / self._img_dir_name
         self._skip_all_errors = skip_all_errors
         self._downloading_timeout = downloading_timeout if downloading_timeout > 0 else None
-        self._deduplication_variant = deduplication_variant
         self._process_local_images = process_local_images
+        self._deduplicator = deduplicator
 
     def download_images(self, images: List[str]) -> dict:
         """
@@ -59,13 +51,10 @@ class ImageDownloader:
         """
 
         replacement_mapping = {}
-        hash_to_path_mapping = {}
+
         skip_list = self._skip_list
         images_count = len(images)
-        img_dir_name = self._img_dir_name
-        img_public_path = self._img_public_path
         images_dir = self._images_dir
-        deduplication_variant = self._deduplication_variant
 
         try:
             self._images_dir.mkdir(parents=True)
@@ -102,24 +91,13 @@ class ImageDownloader:
                     continue
                 raise
 
-            if DeduplicationVariant.CONTENT_HASH == deduplication_variant:
-                # TODO: process collisions (possibly).
-                new_content_hash = hashlib.sha256(image_content).digest()
-                existed_file_name = hash_to_path_mapping.get(new_content_hash)
-                if existed_file_name is not None:
-                    img_filename = existed_file_name
-                    document_img_path = (img_public_path or img_dir_name) / img_filename
-                    replacement_mapping.setdefault(image_url, document_img_path)
+            if self._deduplicator is not None:
+                result, image_filename = self._deduplicator.deduplicate(image_url, image_filename, image_content,
+                                                                        replacement_mapping)
+                if not result:
                     continue
-                else:
-                    hash_to_path_mapping[new_content_hash] = image_filename
-            elif DeduplicationVariant.NAMES_HASHING == deduplication_variant:
-                # TODO: replace sha-1, check for collisions.
-                image_filename = f'{hashlib.sha1(image_content).hexdigest()}{Path(image_filename).suffix}'
-            elif DeduplicationVariant.DISABLED == deduplication_variant:
-                pass
 
-            document_img_path = (img_public_path or img_dir_name) / image_filename
+            document_img_path = (self._img_public_path or self._img_dir_name) / image_filename
             image_filename, document_img_path = self._correct_paths(replacement_mapping, document_img_path, image_url,
                                                                     image_filename)
 
@@ -131,7 +109,7 @@ class ImageDownloader:
         return replacement_mapping
 
     def _get_remote_image(self, image_url: str, img_num: int, img_count: int):
-        logging.info('Downloading image %d of {img_count} from "%s"...', img_num + 1, image_url)
+        logging.info('Downloading image %d of %d from "%s"...', img_num + 1, img_count, image_url)
         img_response = download_from_url(image_url, self._downloading_timeout)
 
         return get_filename_from_url(img_response), img_response.content

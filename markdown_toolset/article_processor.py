@@ -1,13 +1,22 @@
 import logging
+from enum import Enum
 from pathlib import Path
 from string import Template
 from time import strftime
 from typing import Union, List
 
+from .deduplicators.content_hash_dedup import ContentHashDeduplicator
+from .deduplicators.name_hash_dedup import NameHashDeduplicator
 from .www_tools import is_url, download_from_url, get_filename_from_url, get_base_url
-from .image_downloader import ImageDownloader, DeduplicationVariant
+from .image_downloader import ImageDownloader
 from .formatters import FORMATTERS, get_formatter, format_article
 from .transformers import TRANSFORMERS, transform_article
+
+
+class DeduplicationVariant(Enum):
+    DISABLED = 0,
+    NAMES_HASHING = 1,
+    CONTENT_HASH = 2
 
 
 class ArticleProcessor:
@@ -55,15 +64,27 @@ class ArticleProcessor:
 
         logging.info('Image public path: %s', Template(self._images_public_path).safe_substitute(**variables))
 
+        image_dir_name = Path(Template(self._images_dirname).safe_substitute(**variables))
+        image_public_path = Path(Template(self._images_public_path).safe_substitute(**variables))
+
+        deduplicator = None
+
+        if DeduplicationVariant.CONTENT_HASH == self._deduplication_type:
+            deduplicator = ContentHashDeduplicator(image_dir_name, image_public_path)
+        elif DeduplicationVariant.NAMES_HASHING == self._deduplication_type:
+            deduplicator = NameHashDeduplicator()
+        elif DeduplicationVariant.DISABLED == self._deduplication_type:
+            pass
+
         img_downloader = ImageDownloader(
             article_path=article_path,
             article_base_url=article_base_url,
             skip_list=skip_list,
             skip_all_errors=self._skip_all_incorrect,
-            img_dir_name=Path(Template(self._images_dirname).safe_substitute(**variables)),
-            img_public_path=Path(Template(self._images_public_path).safe_substitute(**variables)),
+            img_dir_name=image_dir_name,
+            img_public_path=image_public_path,
             downloading_timeout=self._downloading_timeout,
-            deduplication_variant=self._deduplication_type,
+            deduplicator=deduplicator,
             process_local_images=self._process_local_images
         )
 

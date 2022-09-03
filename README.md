@@ -119,3 +119,7 @@ Example 3 (run on a folder):
 find content/ -name "*.md" | xargs -n1 ./markdown_tool.py
 ```
 
+
+# Internals
+
+Tools is a pipeline, which get Markdown form the source and process them, using blocks.

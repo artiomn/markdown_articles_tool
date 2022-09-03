@@ -1,9 +1,10 @@
 from io import StringIO
+from pathlib import Path
 from typing import Any, List
 from markdown_toolset.image_downloader import ImageDownloader
 
 
-def transform_article(article_path: str, input_format_list: List[str], transformers_list: List[Any],
+def transform_article(article_path: Path, input_format_list: List[str], transformers_list: List[Any],
                       img_downloader: ImageDownloader) -> str:
     """
     Download images and fix URL's.
