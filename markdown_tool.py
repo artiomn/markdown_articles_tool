@@ -31,6 +31,9 @@ def main(arguments):
 
     print(f'Markdown tool version {__version__} started...')
 
+    if arguments.process_local_images:
+        print('--process_local_images is deprecated and will be disabled in the next version!')
+
     processor = ArticleProcessor(skip_list=arguments.skip_list,
                                  article_file_path_or_url=arguments.article_file_path_or_url,
                                  downloading_timeout=arguments.downloading_timeout,
@@ -41,7 +44,6 @@ def main(arguments):
                                  input_formats=arguments.input_format.split('+'),
                                  skip_all_incorrect=arguments.skip_all_incorrect,
                                  deduplication_type=getattr(DeduplicationVariant, arguments.deduplication_type.upper()),
-                                 process_local_images=arguments.process_local_images,
                                  images_dirname=arguments.images_dirname)
 
     processor.process()
@@ -69,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--input-format', default='md', choices=in_format_list,
                         help='input format')
     parser.add_argument('-l', '--process-local-images', default=False, action='store_true',
-                        help='Process local images')
+                        help='[DEPRECATED] Process local images')
     parser.add_argument('-n', '--replace-image-names', default=False, action='store_true',
                         help='Replace image names, using content hash')
     parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
@@ -77,8 +79,9 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--images-public-path', default='',
                         help='Public path to the folder of downloaded images '
                              '(possible variables: $article_name, $time, $date, $dt, $base_url)')
+    # TODO: Replace this with variables.
     parser.add_argument('-P', '--prepend-images-with-path', default=False, action='store_true',
-                        help='')
+                        help='Save relative images paths')
     parser.add_argument('-R', '--remove-source', default=False, action='store_true',
                         help='Remove or replace source file')
     parser.add_argument('-t', '--downloading-timeout', type=float, default=-1,

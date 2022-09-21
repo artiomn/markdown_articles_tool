@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional, List
 
 from .deduplicators.deduplicator import Deduplicator
+from .out_path_maker import OutPathMaker
 from .www_tools import is_url, get_filename_from_url, download_from_url
 
 
@@ -13,12 +14,12 @@ class ImageDownloader:
     """
 
     # TODO: many parameters - refactor this.
-    def __init__(self, article_path: Path, article_base_url: str = '', skip_list: Optional[List[str]] = None,
-                 skip_all_errors: bool = False, img_dir_name: Path = Path('images'),
-                 img_public_path: Optional[Path] = None,
+    def __init__(self,
+                 out_path_maker: OutPathMaker,
+                 skip_list: Optional[List[str]] = None,
+                 skip_all_errors: bool = False,
                  downloading_timeout: float = -1,
-                 deduplicator: Optional[Deduplicator] = None,
-                 process_local_images: bool = False):
+                 deduplicator: Optional[Deduplicator] = None):
         """
         :parameter article_path: path to the article file.
         :parameter article_base_url: URL to download article.
@@ -33,15 +34,10 @@ class ImageDownloader:
         """
 
         # TODO: rename parameters.
-        self._img_dir_name = img_dir_name
-        self._img_public_path = img_public_path
-        self._article_file_path: Path = article_path
-        self._article_base_url = article_base_url
+        self._out_path_maker = out_path_maker
         self._skip_list = set(skip_list) if skip_list is not None else []
-        self._images_dir = self._article_file_path.parent / self._img_dir_name
         self._skip_all_errors = skip_all_errors
         self._downloading_timeout = downloading_timeout if downloading_timeout > 0 else None
-        self._process_local_images = process_local_images
         self._deduplicator = deduplicator
 
     def download_images(self, images: List[str]) -> dict:
@@ -53,12 +49,11 @@ class ImageDownloader:
 
         replacement_mapping = {}
 
-        skip_list = self._skip_list
         images_count = len(images)
-        images_dir = self._images_dir
+        images_dir = self._out_path_maker._images_dir
 
         try:
-            self._images_dir.mkdir(parents=True)
+            self._out_path_maker._images_dir.mkdir(parents=True)
         except FileExistsError:
             # Existing directory is not error.
             pass
@@ -66,19 +61,20 @@ class ImageDownloader:
         for image_num, image_url in enumerate(images):
             assert image_url not in replacement_mapping.keys(), f'BUG: already downloaded image "{image_url}"...'
 
-            if image_url in skip_list:
-                logging.debug('Image %d ["%s"] was skipped, because it\'s in the skip list...', image_num + 1, image_url)
+            if self._need_to_skip_url(image_url):
+                logging.debug('Image %d downloading was skipped...', image_num + 1)
                 continue
 
             image_path_is_url = is_url(image_url)
-            if not image_path_is_url and not self._process_local_images:
-                logging.warning('Image %d ["%s"] has incorrect URL...', image_num + 1, image_url)
-                if self._article_base_url:
-                    logging.debug('Trying to add base URL "%s"...', self._article_base_url)
-                    image_url = f'{self._article_base_url}/{image_url}'
+
+            if not image_path_is_url:
+                logging.warning('Image %d ["%s"] probably has incorrect URL...', image_num + 1, image_url)
+
+                if self._out_path_maker._article_base_url:
+                    logging.debug('Trying to add base URL "%s"...', self._out_path_maker._article_base_url)
+                    image_url = f'{self._out_path_maker._article_base_url}/{image_url}'
                 else:
-                    logging.info('Image downloading will be skipped...')
-                    continue
+                    image_url = str(Path(self._out_path_maker._article_file_path).parent/image_url)
 
             try:
                 image_filename, image_content = \
@@ -109,8 +105,20 @@ class ImageDownloader:
 
         return replacement_mapping
 
+    def _need_to_skip_url(self, image_url: str) -> bool:
+        """
+        Returns True, if the image doesn't need to be downloaded.
+        """
+
+        if image_url in self._skip_list:
+            logging.debug('Image ["%s"] was skipped, because it\'s in the skip list...', image_url)
+            return True
+
+        return False
+
     def _get_document_img_path(self, image_filename):
-        return (self._img_public_path if self._img_public_path is not None else self._img_dir_name) / image_filename
+        return (self._out_path_maker._img_public_path if self._out_path_maker._img_public_path is not None
+                else self._out_path_maker._img_dir_name) / image_filename
 
     def _get_remote_image(self, image_url: str, img_num: int, img_count: int):
         logging.info('Downloading image %d of %d from "%s"...', img_num + 1, img_count, image_url)

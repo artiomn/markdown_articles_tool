@@ -7,6 +7,7 @@ from typing import Union, List
 
 from .deduplicators.content_hash_dedup import ContentHashDeduplicator
 from .deduplicators.name_hash_dedup import NameHashDeduplicator
+from .out_path_maker import OutPathMaker
 from .www_tools import is_url, download_from_url, get_filename_from_url, get_base_url
 from .image_downloader import ImageDownloader
 from .formatters import FORMATTERS, get_formatter, format_article
@@ -26,7 +27,7 @@ class ArticleProcessor:
                  remove_source: bool, images_public_path: Union[Path, str],
                  input_formats: List[str], skip_all_incorrect: bool,
                  deduplication_type: DeduplicationVariant,
-                 process_local_images: bool, images_dirname: Union[Path, str]):
+                 images_dirname: Union[Path, str]):
         self._skip_list = skip_list
         self._article_file_path_or_url = article_file_path_or_url
         self._downloading_timeout = downloading_timeout
@@ -37,7 +38,6 @@ class ArticleProcessor:
         self._input_formats = input_formats
         self._skip_all_incorrect = skip_all_incorrect
         self._deduplication_type = deduplication_type
-        self._process_local_images = process_local_images
         self._images_dirname = images_dirname
 
     def process(self):
@@ -77,16 +77,19 @@ class ArticleProcessor:
         elif DeduplicationVariant.DISABLED == self._deduplication_type:
             pass
 
-        img_downloader = ImageDownloader(
+        out_path_maker = OutPathMaker(
             article_path=article_path,
             article_base_url=article_base_url,
+            img_dir_name=image_dir_name,
+            img_public_path=image_public_path
+        )
+
+        img_downloader = ImageDownloader(
+            out_path_maker=out_path_maker,
             skip_list=skip_list,
             skip_all_errors=self._skip_all_incorrect,
-            img_dir_name=image_dir_name,
-            img_public_path=image_public_path,
             downloading_timeout=self._downloading_timeout,
-            deduplicator=deduplicator,
-            process_local_images=self._process_local_images
+            deduplicator=deduplicator
         )
 
         result = transform_article(article_path, self._input_formats, TRANSFORMERS, img_downloader)

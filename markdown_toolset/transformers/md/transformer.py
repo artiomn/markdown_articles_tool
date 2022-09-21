@@ -23,7 +23,7 @@ class ImgExtractor(Treeprocessor):
 
 
 class ImgExtExtension(Extension):
-    def extendMarkdown(self, md, md_globals):  # noqa: signature redefinition by design.
+    def extendMarkdown(self, md, **argv):  # noqa: signature redefinition by design.
         img_ext = ImgExtractor(md)
         md.treeprocessors.register(img_ext, 'imgext', 20)
 
