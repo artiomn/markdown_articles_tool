@@ -4,6 +4,10 @@ from typing import Any, List
 
 
 def get_formatter(output_format: str, formatters_list: List[Any]):
+    """
+    Return output formatter by format string.
+    """
+
     formatter = [f for f in formatters_list if f is not None and f.format == output_format]
     assert len(formatter) == 1
     formatter = formatter[0]

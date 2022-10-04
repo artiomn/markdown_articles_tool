@@ -5,7 +5,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/releases)
 
 
-# Markdown articles tool 0.1.1
+# Markdown articles tool 0.1.2
 
 Free command line utility, written in Python, designed to help you manage online and downloaded Markdown documents (e.g., articles).
 The Markdown Articles Tool is available for macOS, Windows, and Linux. 
@@ -61,18 +61,11 @@ pip3 install markdown-tool
 Syntax:
 
 ```
-usage: markdown_tool.py [-h] [-D {disabled,names_hashing,content_hash}] [-d IMAGES_DIRNAME] [-a] [-s SKIP_LIST]
-                        [-i {md,html,md+html,html+md}] [-l] [-n] [-o {md,html,pdf}] [-p IMAGES_PUBLIC_PATH] [-R]
-                        [-t DOWNLOADING_TIMEOUT] [-O OUTPUT_PATH] [--verbose] [--version]
-                        article_file_path_or_url
+markdown_tool [-h] [-D {disabled,names_hashing,content_hash}] [-d IMAGES_DIRNAME] [-a] [-s SKIP_LIST]
+              [-i {md,html,md+html,html+md}] [-l] [-n] [-o {md,html}] [-p IMAGES_PUBLIC_PATH] [-P] [-R]
+              [-t DOWNLOADING_TIMEOUT] [-O OUTPUT_PATH] [--verbose] [--version] article_file_path_or_url
 
-Simple script to download images and replace image links in markdown documents.
-
-positional arguments:
-  article_file_path_or_url
-                        path to the article file in the Markdown format
-
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -D {disabled,names_hashing,content_hash}, --deduplication-type {disabled,names_hashing,content_hash}
                         Deduplicate images, using content hash or SHA1(image_name)
@@ -85,13 +78,15 @@ optional arguments:
   -i {md,html,md+html,html+md}, --input-format {md,html,md+html,html+md}
                         input format
   -l, --process-local-images
-                        Process local images
+                        [DEPRECATED] Process local images
   -n, --replace-image-names
                         Replace image names, using content hash
-  -o {md,html,pdf}, --output-format {md,html,pdf}
+  -o {md,html}, --output-format {md,html}
                         output format
   -p IMAGES_PUBLIC_PATH, --images-public-path IMAGES_PUBLIC_PATH
                         Public path to the folder of downloaded images (possible variables: $article_name, $time, $date, $dt, $base_url)
+  -P, --prepend-images-with-path
+                        Save relative images paths
   -R, --remove-source   Remove or replace source file
   -t DOWNLOADING_TIMEOUT, --downloading-timeout DOWNLOADING_TIMEOUT
                         how many seconds to wait before downloading will be failed

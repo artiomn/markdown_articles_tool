@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Simple script to download images and replace image links in markdown documents.
+Tool for the downloading Markdown articles, replace image links and save the article in the selected format.
 """
 
 import argparse
@@ -56,7 +56,12 @@ if __name__ == '__main__':
     in_format_list = [*in_format_list, *('+'.join(i) for i in permutations(in_format_list))]
     out_format_list = [f.format for f in FORMATTERS if f is not None]
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        prog='markdown_tool',
+        epilog='Use this at your own risk',
+        description=f'{__doc__}Version: {__version__}',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument('article_file_path_or_url', type=str,
                         help='path to the article file in the Markdown format')
     parser.add_argument('-D', '--deduplication-type', choices=[i.name.lower() for i in DeduplicationVariant],
