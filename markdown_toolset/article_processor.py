@@ -77,7 +77,6 @@ class ArticleProcessor:
         elif DeduplicationVariant.DISABLED == self._deduplication_type:
             pass
 
-        print('ABU', article_base_url)
         out_path_maker = OutPathMaker(
             article_file_path=article_path,
             article_base_url=article_base_url,
