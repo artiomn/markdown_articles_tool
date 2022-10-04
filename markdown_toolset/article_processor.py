@@ -8,7 +8,7 @@ from typing import Union, List
 from .deduplicators.content_hash_dedup import ContentHashDeduplicator
 from .deduplicators.name_hash_dedup import NameHashDeduplicator
 from .out_path_maker import OutPathMaker
-from .www_tools import is_url, download_from_url, get_filename_from_url, get_base_url
+from .www_tools import is_url, download_from_url, get_filename_from_url, get_base_url, remove_protocol_prefix
 from .image_downloader import ImageDownloader
 from .formatters import FORMATTERS, get_formatter, format_article
 from .transformers import TRANSFORMERS, transform_article
@@ -59,7 +59,7 @@ class ArticleProcessor:
             'time': strftime('%H%M%S'),
             'date': strftime('%Y%m%d'),
             'dt': strftime('%Y%m%d_%H%M%S'),
-            'base_url': article_base_url.lstrip('https://').lstrip('http://')
+            'base_url': remove_protocol_prefix(article_base_url)
         }
 
         image_public_path = Template(self._images_public_path).safe_substitute(**variables)
@@ -77,8 +77,9 @@ class ArticleProcessor:
         elif DeduplicationVariant.DISABLED == self._deduplication_type:
             pass
 
+        print('ABU', article_base_url)
         out_path_maker = OutPathMaker(
-            article_path=article_path,
+            article_file_path=article_path,
             article_base_url=article_base_url,
             img_dir_name=image_dir_name,
             img_public_path=image_public_path
@@ -129,7 +130,7 @@ class ArticleProcessor:
                 article_file.close()
         else:
             article_path = Path(article_link).expanduser()
-            article_base_url = ''
+            article_base_url = str('/'.join(article_path.parts[:-1]))
 
         return article_path, article_base_url
 

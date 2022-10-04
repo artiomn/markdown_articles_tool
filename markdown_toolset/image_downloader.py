@@ -13,7 +13,6 @@ class ImageDownloader:
     "Smart" images downloader.
     """
 
-    # TODO: many parameters - refactor this.
     def __init__(self,
                  out_path_maker: OutPathMaker,
                  skip_list: Optional[List[str]] = None,
@@ -50,13 +49,6 @@ class ImageDownloader:
         replacement_mapping = {}
 
         images_count = len(images)
-        images_dir = self._out_path_maker._images_dir
-
-        try:
-            self._out_path_maker._images_dir.mkdir(parents=True)
-        except FileExistsError:
-            # Existing directory is not error.
-            pass
 
         for image_num, image_url in enumerate(images):
             assert image_url not in replacement_mapping.keys(), f'BUG: already downloaded image "{image_url}"...'
@@ -72,14 +64,16 @@ class ImageDownloader:
 
                 if self._out_path_maker._article_base_url:
                     logging.debug('Trying to add base URL "%s"...', self._out_path_maker._article_base_url)
-                    image_url = f'{self._out_path_maker._article_base_url}/{image_url}'
+                    image_download_url = f'{self._out_path_maker._article_base_url}/{image_url}'
                 else:
-                    image_url = str(Path(self._out_path_maker._article_file_path).parent/image_url)
+                    image_download_url = str(Path(self._out_path_maker._article_file_path).parent/image_url)
+            else:
+                image_download_url = image_url
 
             try:
                 image_filename, image_content = \
-                    self._get_remote_image(image_url, image_num, images_count) if image_path_is_url \
-                    else ImageDownloader._get_local_image(Path(image_url))
+                    self._get_remote_image(image_download_url, image_num, images_count) if image_path_is_url \
+                    else ImageDownloader._get_local_image(Path(image_download_url))
             except Exception as e:
                 if self._skip_all_errors:
                     logging.warning('Can\'t get image %d, error: [%s], '
@@ -88,19 +82,23 @@ class ImageDownloader:
                     continue
                 raise
 
+            self._out_path_maker.make_directories(Path(image_url).parent)
+
             if self._deduplicator is not None:
                 result, image_filename = self._deduplicator.deduplicate(image_url, image_filename, image_content,
                                                                         replacement_mapping)
                 if not result:
                     continue
 
-            document_img_path = self._get_document_img_path(image_filename)
-            image_filename, document_img_path = self._correct_paths(replacement_mapping, document_img_path, image_url,
-                                                                    image_filename)
+            document_img_path = self._out_path_maker.get_document_img_path(image_filename)
+            image_filename, document_img_path = self._fix_paths(replacement_mapping, document_img_path, image_url,
+                                                                image_filename)
 
-            real_image_path = images_dir / image_filename
+            print('IFN-', image_filename)
+            real_image_path = self._out_path_maker.get_real_path(image_url, image_filename)
             replacement_mapping.setdefault(image_url, '/'.join(document_img_path.parts))
 
+# TODO: check if image is exists.
             ImageDownloader._write_image(real_image_path, image_content)
 
         return replacement_mapping
@@ -115,10 +113,6 @@ class ImageDownloader:
             return True
 
         return False
-
-    def _get_document_img_path(self, image_filename):
-        return (self._out_path_maker._img_public_path if self._out_path_maker._img_public_path is not None
-                else self._out_path_maker._img_dir_name) / image_filename
 
     def _get_remote_image(self, image_url: str, img_num: int, img_count: int):
         logging.info('Downloading image %d of %d from "%s"...', img_num + 1, img_count, image_url)
@@ -145,7 +139,7 @@ class ImageDownloader:
             image_file.write(data)
             image_file.close()
 
-    def _correct_paths(self, replacement_mapping, document_img_path, img_url, image_filename):
+    def _fix_paths(self, replacement_mapping, document_img_path, img_url, image_filename):
         """
         Fix path if a file with the similar name exists already.
         """
@@ -154,7 +148,7 @@ class ImageDownloader:
         for url, path in replacement_mapping.items():
             if document_img_path == path and img_url != url:
                 image_filename = f'{hashlib.md5(img_url.encode()).hexdigest()}_{image_filename}'
-                document_img_path = self._get_document_img_path(image_filename)
+                document_img_path = self._out_path_maker.get_document_img_path(image_filename)
                 break
 
         return image_filename, document_img_path

@@ -15,17 +15,28 @@ NECESSARY_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
 }
 
+__protocol_prefix_replace_regex = re.compile(r'^\s*(:?(?:(?:http|ftp)+s?|file)://)', re.IGNORECASE)
 
-def is_url(url: str, allowed_url_prefixes=('http', 'ftp')) -> bool:
+
+def is_url(url: str, allowed_url_prefixes=('http', 'ftp', 'https', 'ftps')) -> bool:
     """
     Check url for prefix match.
     """
 
+    l_url = url.lower()
     for prefix in set(allowed_url_prefixes):
-        if url.startswith(prefix):
+        if l_url.startswith(prefix.lower()):
             return True
 
     return False
+
+
+def remove_protocol_prefix(url: str) -> str:
+    """
+    Remove prefixes like http, ftp, HTTPS, and other from the URL.
+    """
+
+    return __protocol_prefix_replace_regex.sub('', url)
 
 
 def download_from_url(url: str, timeout=None):

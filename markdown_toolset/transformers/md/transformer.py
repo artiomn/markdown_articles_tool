@@ -69,4 +69,6 @@ class ArticleTransformer:
         """
 
         self._replacement_mapping = self._image_downloader.download_images(self._read_article())
-        return self._fix_document_urls()
+        res = self._fix_document_urls()
+        print('RES', res)
+        return res

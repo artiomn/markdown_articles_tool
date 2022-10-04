@@ -21,17 +21,18 @@ class ContentHashDeduplicator(Deduplicator):
     def deduplicate(self, image_url, image_filename, image_content, replacement_mapping) -> Tuple[bool, str]:
         new_content_hash = hashlib.sha256(image_content).digest()
         existed_file_name = self._hash_to_path_mapping.get(new_content_hash)
-
+# TODO: не работает!!!
         if existed_file_name is not None:
             document_img_path = (self._img_public_path if self._img_public_path else self._img_dir_name)\
                 / existed_file_name
+            logging.debug('ContentHashDeduplicator: existed filename = "%s", document image path = "%s"',
+                          existed_file_name, document_img_path)
             with open(document_img_path, 'rb') as cur_image:
                 # Test for the collisions prevention.
                 if is_binary_same(BytesIO(image_content), cur_image):
                     logging.debug('Images with the names "%s" and "%s" are similar', existed_file_name, image_filename)
-                    img_filename = existed_file_name
                     replacement_mapping.setdefault(image_url, document_img_path)
-                    return False, img_filename
+                    return False, existed_file_name
 
         self._hash_to_path_mapping[new_content_hash] = image_filename
 
