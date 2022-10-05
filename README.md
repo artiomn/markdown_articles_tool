@@ -47,7 +47,8 @@ Also, if you want to use separate functions, you can just import the package.
 
 ### From the repository
 
-You need Python 3.8+.
+**You need Python 3.9+.**
+
 Run:
 
 ```
