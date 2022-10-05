@@ -1,5 +1,6 @@
 import logging
 import hashlib
+import mimetypes
 from pathlib import Path
 from typing import Optional, List
 
@@ -17,26 +18,24 @@ class ImageDownloader:
                  out_path_maker: OutPathMaker,
                  skip_list: Optional[List[str]] = None,
                  skip_all_errors: bool = False,
+                 download_incorrect_mime_types: bool = False,
                  downloading_timeout: float = -1,
                  deduplicator: Optional[Deduplicator] = None):
         """
-        :parameter article_path: path to the article file.
-        :parameter article_base_url: URL to download article.
+        :parameter out_path_maker: image local path creating strategy.
         :parameter skip_list: URLs of images to skip.
         :parameter skip_all_errors: if it's True, skip all errors and continue working.
-        :parameter img_dir_name: relative path of the directory where image files will be downloaded.
-        :parameter img_public_path: if set, will be used in the document instead of `img_dir_name`.
         :parameter downloading_timeout: if timeout =< 0 - infinite wait for the image downloading, otherwise wait for
                                         `downloading_timeout` seconds.
+        :parameter download_incorrect_mime_types: download images even if MIME type can't be identified.
         :parameter deduplicator: file deduplicator object.
-        :parameter process_local_images: if True, local image files will be processed.
         """
 
-        # TODO: rename parameters.
         self._out_path_maker = out_path_maker
         self._skip_list = set(skip_list) if skip_list is not None else []
         self._skip_all_errors = skip_all_errors
         self._downloading_timeout = downloading_timeout if downloading_timeout > 0 else None
+        self._download_incorrect_mime_types = download_incorrect_mime_types
         self._deduplicator = deduplicator
 
     def download_images(self, images: List[str]) -> dict:
@@ -62,15 +61,23 @@ class ImageDownloader:
             if not image_path_is_url:
                 logging.warning('Image %d ["%s"] probably has incorrect URL...', image_num + 1, image_url)
 
-                if self._out_path_maker._article_base_url:
-                    logging.debug('Trying to add base URL "%s"...', self._out_path_maker._article_base_url)
-                    image_download_url = f'{self._out_path_maker._article_base_url}/{image_url}'
+                if self._out_path_maker.article_base_url:
+                    logging.debug('Trying to add base URL "%s"...', self._out_path_maker.article_base_url)
+                    image_download_url = f'{self._out_path_maker.article_base_url}/{image_url}'
                 else:
-                    image_download_url = str(Path(self._out_path_maker._article_file_path).parent/image_url)
+                    image_download_url = str(Path(self._out_path_maker.article_file_path).parent/image_url)
             else:
                 image_download_url = image_url
 
             try:
+                mime_type, _ = mimetypes.guess_type(image_download_url)
+                logging.debug('"%s" MIME type = %s', image_download_url, mime_type)
+
+                if not self._download_incorrect_mime_types and mime_type is None:
+                    logging.warning('Image "%s" has incorrect MIME type and will not be downloaded!',
+                                    image_download_url)
+                    continue
+
                 image_filename, image_content = \
                     self._get_remote_image(image_download_url, image_num, images_count) if image_path_is_url \
                     else ImageDownloader._get_local_image(Path(image_download_url))

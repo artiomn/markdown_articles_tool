@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from time import strftime
 
-from .www_tools import is_url, download_from_url, get_filename_from_url, get_base_url, remove_protocol_prefix
+from .www_tools import is_url, download_from_url, get_filename_from_url, get_base_url
 
 
 class ArticleDownloader:
@@ -16,6 +16,7 @@ class ArticleDownloader:
         self._article_formatter = article_formatter
         self._downloading_timeout = downloading_timeout
         self._remove_source = remove_source
+        # TODO: Merge `article_path` and `article_out_path`.
         self._article_path = None
         self._article_out_path = None
 

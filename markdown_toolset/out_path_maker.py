@@ -15,6 +15,13 @@ class OutPathMaker:
                  img_dir_name: Path = Path('images'),
                  img_public_path: Optional[Path] = None,
                  save_hierarchy: bool = False):
+        """
+        :parameter article_file_path: path to the article file.
+        :parameter article_base_url: URL to download article.
+        :parameter img_dir_name: relative path of the directory where image files will be downloaded.
+        :parameter img_public_path: if set, will be used in the document instead of `img_dir_name`.
+        :parameter save_hierarchy: if set, remote hierarchy will be used for the save image locally.
+        """
 
         logging.debug('Article file path = "%s", base URL = "%s"', article_file_path, article_base_url)
 

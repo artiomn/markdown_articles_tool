@@ -60,6 +60,7 @@ def main(arguments):
                                  images_public_path=getattr(arguments, 'images_public_path', ''),
                                  input_formats=arguments.input_format.split('+'),
                                  skip_all_incorrect=arguments.skip_all_incorrect,
+                                 download_incorrect_mime=arguments.download_incorrect_mime,
                                  deduplication_type=getattr(DeduplicationVariant, arguments.deduplication_type.upper()),
                                  images_dirname=arguments.images_dirname)
 
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         prog='markdown_tool',
-        epilog='Use this at your own risk',
+        epilog='Use tool at your own risk!',
         description=f'{__doc__}Version: {__version__}',
         formatter_class=CustomArgumentDefaultsHelpFormatter
     )
@@ -85,6 +86,8 @@ if __name__ == '__main__':
                              '(possible variables: $article_name, $time, $date, $dt, $base_url)')
     parser.add_argument('-a', '--skip-all-incorrect', default=False, action='store_true',
                         help='skip all incorrect images')
+    parser.add_argument('-E', '--download-incorrect-mime', default=False, action='store_true',
+                        help='download "images" with unrecognized MIME type')
     parser.add_argument('-s', '--skip-list', default=None,
                         help='skip URL\'s from the comma-separated list (or file with a leading \'@\')')
     parser.add_argument('-i', '--input-format', default='md', choices=IN_FORMATS_LIST,

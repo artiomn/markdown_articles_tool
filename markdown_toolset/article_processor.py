@@ -1,5 +1,4 @@
 import logging
-from enum import Enum
 from itertools import permutations
 from pathlib import Path
 from string import Template
@@ -7,8 +6,7 @@ from time import strftime
 from typing import Union, List
 
 from .article_downloader import ArticleDownloader
-from .deduplicators.content_hash_dedup import ContentHashDeduplicator
-from .deduplicators.name_hash_dedup import NameHashDeduplicator
+from .deduplicators import DeduplicationVariant, select_deduplicator
 from .out_path_maker import OutPathMaker
 from .www_tools import remove_protocol_prefix
 from .image_downloader import ImageDownloader
@@ -20,18 +18,13 @@ IN_FORMATS_LIST = [*IN_FORMATS_LIST, *('+'.join(i) for i in permutations(IN_FORM
 OUT_FORMATS_LIST = [f.format for f in FORMATTERS if f is not None]
 
 
-class DeduplicationVariant(Enum):
-    DISABLED = 0,
-    NAMES_HASHING = 1,
-    CONTENT_HASH = 2
-
-
 class ArticleProcessor:
     def __init__(self, article_file_path_or_url: str,
                  skip_list: Union[str, List[str]] = '', downloading_timeout: int = -1,
                  output_format: str = OUT_FORMATS_LIST[0], output_path: Union[Path, str] = Path.cwd(),
                  remove_source: bool = False, images_public_path: Union[Path, str] = '',
                  input_formats: List[str] = tuple(IN_FORMATS_LIST), skip_all_incorrect: bool = False,
+                 download_incorrect_mime: bool = False,
                  deduplication_type: DeduplicationVariant = DeduplicationVariant.DISABLED,
                  images_dirname: Union[Path, str] = 'images'):
         self._article_formatter = get_formatter(output_format, FORMATTERS)
@@ -44,11 +37,12 @@ class ArticleProcessor:
         self._images_public_path = images_public_path
         self._input_formats = input_formats
         self._skip_all_incorrect = skip_all_incorrect
+        self._download_incorrect_mime = download_incorrect_mime
         self._deduplication_type = deduplication_type
         self._images_dirname = images_dirname
 
     def process(self):
-        skip_list = self._process_skip_list()
+        skip_list = self._process_skip_list_file()
         article_path, article_base_url, article_out_path = self._article_downloader.get_article()
 
         logging.info('File "%s" will be processed...', article_path)
@@ -67,14 +61,10 @@ class ArticleProcessor:
         image_dir_name = Path(Template(self._images_dirname).safe_substitute(**variables))
         image_public_path = None if not image_public_path else Path(image_public_path)
 
-        deduplicator = None
-
-        if DeduplicationVariant.CONTENT_HASH == self._deduplication_type:
-            deduplicator = ContentHashDeduplicator(image_dir_name, image_public_path)
-        elif DeduplicationVariant.NAMES_HASHING == self._deduplication_type:
-            deduplicator = NameHashDeduplicator()
-        elif DeduplicationVariant.DISABLED == self._deduplication_type:
-            pass
+        if self._deduplication_type == DeduplicationVariant.CONTENT_HASH:
+            deduplicator = select_deduplicator(self._deduplication_type, image_dir_name, image_public_path)
+        else:
+            deduplicator = select_deduplicator(self._deduplication_type)
 
         out_path_maker = OutPathMaker(
             article_file_path=article_path,
@@ -87,6 +77,7 @@ class ArticleProcessor:
             out_path_maker=out_path_maker,
             skip_list=skip_list,
             skip_all_errors=self._skip_all_incorrect,
+            download_incorrect_mime_types=self._download_incorrect_mime,
             downloading_timeout=self._downloading_timeout,
             deduplicator=deduplicator
         )
@@ -94,7 +85,7 @@ class ArticleProcessor:
         result = transform_article(article_path, self._input_formats, TRANSFORMERS, img_downloader)
         format_article(article_out_path, result, self._article_formatter)
 
-    def _process_skip_list(self):
+    def _process_skip_list_file(self):
         skip_list = self._skip_list
 
         if isinstance(skip_list, str):
