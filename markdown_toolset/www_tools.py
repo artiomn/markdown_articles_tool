@@ -83,6 +83,9 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
 
     f_name, f_ext = os.path.splitext(result)
 
+    if f_name == '':
+        return None
+
     result = f'{slugify(f_name)}{guess_extension(req.headers["content-type"].partition(";")[0].strip())}' if not f_ext\
         else f'{slugify(f_name)}.{slugify(f_ext)}'
 

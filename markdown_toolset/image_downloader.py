@@ -74,6 +74,10 @@ class ImageDownloader:
                 image_filename, image_content = \
                     self._get_remote_image(image_download_url, image_num, images_count) if image_path_is_url \
                     else ImageDownloader._get_local_image(Path(image_download_url))
+
+                if image_filename is None:
+                    logging.warning('Empty image filename, probably this is incorrect link: "%s".', image_download_url)
+                    continue
             except Exception as e:
                 if self._skip_all_errors:
                     logging.warning('Can\'t get image %d, error: [%s], '
