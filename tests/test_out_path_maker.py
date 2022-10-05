@@ -52,7 +52,7 @@ class TestOutPathMaker:
         opm = OutPathMaker(
             article_file_path=Path('/home/artiom/my_article.md'),
             article_base_url='/home/artiom',
-            img_dir_name=Path('/home/artiom/images')
+            img_dir_name=Path('images')
         )
 
         self._wo_hier_tester(opm)
@@ -61,7 +61,7 @@ class TestOutPathMaker:
         opm = OutPathMaker(
             article_file_path=Path('/home/artiom/my_article.md'),
             article_base_url='https://artiomsoft.ru',
-            img_dir_name=Path('/home/artiom/images')
+            img_dir_name=Path('images')
         )
 
         self._wo_hier_tester(opm)
@@ -70,7 +70,7 @@ class TestOutPathMaker:
         opm = OutPathMaker(
             article_file_path=Path('/home/artiom/my_article.md'),
             article_base_url='/home/artiom',
-            img_dir_name=Path('/home/artiom/images')
+            img_dir_name=Path('images')
         )
 
         self._with_hier_path_tester(opm)
@@ -79,7 +79,7 @@ class TestOutPathMaker:
         opm = OutPathMaker(
             article_file_path=Path('/home/artiom/my_article.md'),
             article_base_url='https://artiomsoft.ru',
-            img_dir_name=Path('/home/artiom/images')
+            img_dir_name=Path('images')
         )
 
         self._with_hier_path_tester(opm)
@@ -88,12 +88,32 @@ class TestOutPathMaker:
         opm = OutPathMaker(
             article_file_path=Path('/home/artiom/my_article.md'),
             article_base_url='/home/artiom',
-            img_dir_name=Path('/home/artiom/images')
+            img_dir_name=Path('images')
         )
 
         self._with_hier_url_tester(opm, 'notagoogle.com')
 
     def test_url_path_maker_urls_with_hier(self):
+        opm = OutPathMaker(
+            article_file_path=Path('/home/artiom/my_article.md'),
+            article_base_url='https://artiomsoft.ru',
+            img_dir_name=Path('images')
+        )
+
+        self._with_hier_url_tester(opm, 'notagoogle.com')
+        # Image Url started with site URL.
+        self._with_hier_url_tester(opm, 'artiomsoft.com', False)
+
+    def test_local_path_maker_without_hier_abs_path(self):
+        opm = OutPathMaker(
+            article_file_path=Path('/home/artiom/my_article.md'),
+            article_base_url='/home/artiom',
+            img_dir_name=Path('/home/artiom/images')
+        )
+
+        self._wo_hier_tester(opm)
+
+    def test_url_path_maker_urls_with_hier_abs_path(self):
         opm = OutPathMaker(
             article_file_path=Path('/home/artiom/my_article.md'),
             article_base_url='https://artiomsoft.ru',

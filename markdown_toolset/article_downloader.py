@@ -55,7 +55,7 @@ class ArticleDownloader:
         return article_path, article_base_url
 
     def _need_to_change_name(self, article_path, article_out_path) -> bool:
-        return (article_path == article_out_path or article_out_path.exists()) and not self._remove_source
+        return article_path == article_out_path and not self._remove_source
 
     @staticmethod
     def _make_new_filename(output_path, article_file_name, file_format):
@@ -70,7 +70,7 @@ class ArticleDownloader:
                 article_out_path = self._make_new_filename(output_path, article_file_name, file_format)
         elif output_path.is_file() or not output_path.exists():
             article_out_path = output_path
-            if self._need_to_change_name(article_path, article_out_path):
+            if self._need_to_change_name(article_path, article_out_path):   # or article_out_path.exists() ?
                 article_out_path = self._make_new_filename(output_path.parent, article_file_name, file_format)
         else:
             raise FileNotFoundError(f'Output path "{output_path}" is incorrect!')

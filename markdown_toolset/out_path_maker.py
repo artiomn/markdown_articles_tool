@@ -28,7 +28,8 @@ class OutPathMaker:
         self._article_file_path: Path = article_file_path
         self._article_base_url = article_base_url
         self._img_dir_name = img_dir_name
-        self._images_dir = self._article_file_path.parent / self._img_dir_name
+        self._images_dir = img_dir_name if img_dir_name.is_absolute() else \
+            self._article_file_path.parent / self._img_dir_name
         self._img_public_path = img_public_path
         self._save_hierarchy = save_hierarchy
 
@@ -97,18 +98,6 @@ class OutPathMaker:
     def get_document_img_path(self, image_filename):
         return (self._img_public_path if self._img_public_path is not None
                 else self._img_dir_name) / image_filename
-
-    def make_directories(self, path: Optional[Path] = None):
-        """
-        Create directories hierarchy, started from images directory.
-        """
-
-        try:
-            dir_hier = self._images_dir / path if path is not None else self._images_dir
-            dir_hier.mkdir(parents=True)
-        except FileExistsError:
-            # Existing directory is not error.
-            pass
 
     @staticmethod
     def _make_relative(p: Union[Path, str]):

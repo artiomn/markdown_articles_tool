@@ -26,7 +26,8 @@ class ArticleProcessor:
                  input_formats: List[str] = tuple(IN_FORMATS_LIST), skip_all_incorrect: bool = False,
                  download_incorrect_mime: bool = False,
                  deduplication_type: DeduplicationVariant = DeduplicationVariant.DISABLED,
-                 images_dirname: Union[Path, str] = 'images'):
+                 images_dirname: Union[Path, str] = 'images',
+                 save_hierarchy: bool = False):
         self._article_formatter = get_formatter(output_format, FORMATTERS)
         self._article_downloader = ArticleDownloader(article_file_path_or_url, output_path,
                                                      self._article_formatter, downloading_timeout, remove_source)
@@ -40,6 +41,7 @@ class ArticleProcessor:
         self._download_incorrect_mime = download_incorrect_mime
         self._deduplication_type = deduplication_type
         self._images_dirname = images_dirname
+        self._save_hierarchy = save_hierarchy
 
     def process(self):
         skip_list = self._process_skip_list_file()
@@ -67,10 +69,11 @@ class ArticleProcessor:
             deduplicator = select_deduplicator(self._deduplication_type)
 
         out_path_maker = OutPathMaker(
-            article_file_path=article_path,
+            article_file_path=article_out_path,
             article_base_url=article_base_url,
             img_dir_name=image_dir_name,
-            img_public_path=image_public_path
+            img_public_path=image_public_path,
+            save_hierarchy=self._save_hierarchy
         )
 
         img_downloader = ImageDownloader(

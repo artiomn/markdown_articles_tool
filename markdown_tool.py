@@ -62,7 +62,8 @@ def main(arguments):
                                  skip_all_incorrect=arguments.skip_all_incorrect,
                                  download_incorrect_mime=arguments.download_incorrect_mime,
                                  deduplication_type=getattr(DeduplicationVariant, arguments.deduplication_type.upper()),
-                                 images_dirname=arguments.images_dirname)
+                                 images_dirname=arguments.images_dirname,
+                                 save_hierarchy=arguments.prepend_images_with_path)
 
     processor.process()
 

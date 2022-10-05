@@ -45,7 +45,7 @@ jobs:
 #    steps:
     - name: Publish package to the PyPI
       # if: startsWith(github.head_ref, 'releases/')
-      # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}

@@ -6,7 +6,7 @@ from typing import Optional, List
 
 from .deduplicators.deduplicator import Deduplicator
 from .out_path_maker import OutPathMaker
-from .www_tools import is_url, get_filename_from_url, download_from_url
+from .www_tools import is_url, get_filename_from_url, download_from_url, remove_protocol_prefix
 
 
 class ImageDownloader:
@@ -56,9 +56,7 @@ class ImageDownloader:
                 logging.debug('Image %d downloading was skipped...', image_num + 1)
                 continue
 
-            image_path_is_url = is_url(image_url)
-
-            if not image_path_is_url:
+            if not is_url(image_url):
                 logging.warning('Image %d ["%s"] probably has incorrect URL...', image_num + 1, image_url)
 
                 if self._out_path_maker.article_base_url:
@@ -79,7 +77,7 @@ class ImageDownloader:
                     continue
 
                 image_filename, image_content = \
-                    self._get_remote_image(image_download_url, image_num, images_count) if image_path_is_url \
+                    self._get_remote_image(image_download_url, image_num, images_count) if is_url(image_download_url) \
                     else ImageDownloader._get_local_image(Path(image_download_url))
 
                 if image_filename is None:
@@ -93,8 +91,6 @@ class ImageDownloader:
                     continue
                 raise
 
-            self._out_path_maker.make_directories(Path(image_url).parent)
-
             if self._deduplicator is not None:
                 result, image_filename = self._deduplicator.deduplicate(image_url, image_filename, image_content,
                                                                         replacement_mapping)
@@ -105,12 +101,25 @@ class ImageDownloader:
             image_filename, document_img_path = self._fix_paths(replacement_mapping, document_img_path, image_url,
                                                                 image_filename)
 
-            real_image_path = self._out_path_maker.get_real_path(image_url, image_filename)
+            real_image_path = self._out_path_maker.get_real_path(
+                Path(remove_protocol_prefix(image_url)).parent.as_posix(), image_filename)
             replacement_mapping.setdefault(image_url, '/'.join(document_img_path.parts))
 
-            ImageDownloader._write_image(real_image_path, image_content)
+            self._write_image(real_image_path, image_content)
 
         return replacement_mapping
+
+    def _make_directories(self, path: Optional[Path] = None):
+        """
+        Create directories hierarchy, started from images directory.
+        """
+
+        try:
+            dir_hier = self._out_path_maker.images_dir / path if path is not None else self._out_path_maker.images_dir
+            dir_hier.mkdir(parents=True)
+        except FileExistsError:
+            # Existing directory is not error.
+            pass
 
     def _need_to_skip_url(self, image_url: str) -> bool:
         """
@@ -136,8 +145,7 @@ class ImageDownloader:
 
         return image_path.name, image_content
 
-    @staticmethod
-    def _write_image(image_path: Path, data: bytes):
+    def _write_image(self, image_path: Path, data: bytes):
         """
         Write image data into the file.
         """
@@ -145,6 +153,8 @@ class ImageDownloader:
         if image_path.exists():
             logging.info('Image "%s" already exists and will not be written...', image_path)
             return
+
+        self._make_directories(image_path.parent)
 
         logging.info('Image will be written to the file "%s"...', image_path)
         with open(image_path, 'wb') as image_file:
