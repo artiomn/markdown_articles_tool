@@ -86,6 +86,8 @@ class ArticleProcessor:
         )
 
         result = transform_article(article_path, self._input_formats, TRANSFORMERS, img_downloader)
+
+        # Format and save the article.
         format_article(article_out_path, result, self._article_formatter)
 
     def _process_skip_list_file(self):

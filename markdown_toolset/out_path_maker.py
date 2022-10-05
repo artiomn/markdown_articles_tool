@@ -95,9 +95,13 @@ class OutPathMaker:
 
         return self._images_dir / result.as_posix() / image_filename
 
-    def get_document_img_path(self, image_filename):
-        return (self._img_public_path if self._img_public_path is not None
-                else self._img_dir_name) / image_filename
+    def get_document_img_path(self, image_url, image_filename):
+        prefix_dir = Path(self._img_public_path if self._img_public_path is not None else self._img_dir_name)
+
+        if self._save_hierarchy:
+            prefix_dir /= image_url
+
+        return prefix_dir / image_filename
 
     @staticmethod
     def _make_relative(p: Union[Path, str]):

@@ -1,6 +1,8 @@
 import logging
+import re
 from pathlib import Path
 from time import strftime
+from typing import Union
 
 from .www_tools import is_url, download_from_url, get_filename_from_url, get_base_url
 
@@ -10,7 +12,9 @@ class ArticleDownloader:
     Download article and return download path.
     """
 
-    def __init__(self, article_url, output_path, article_formatter, downloading_timeout, remove_source: bool = False):
+    def __init__(self, article_url: str, output_path: Union[Path, str], article_formatter,
+                 downloading_timeout: int = -1,
+                 remove_source: bool = False):
         self._article_file_path_or_url = article_url
         self._output_path = output_path
         self._article_formatter = article_formatter
@@ -45,12 +49,21 @@ class ArticleDownloader:
 
             article_base_url = get_base_url(response)
 
+            logging.debug('Article [remote] will be written to "%s"', article_path)
+
+            # Must be written to the filesystem: probably user wants to save original Markdown.
             with open(article_path, 'wb') as article_file:
                 article_file.write(response.content)
                 article_file.close()
         else:
             article_path = Path(article_link).expanduser()
-            article_base_url = str('/'.join(article_path.parts[:-1]))
+            article_base_url = Path('/'.join(article_path.parts[:-1]))
+
+            # Local article doesn't need to be copied: `format_article()` does this.
+            # copy(article_link, article_path)
+
+            # Hack (remove leading //):
+            article_base_url = re.sub(r'^/+', '/', article_base_url.as_posix())
 
         return article_path, article_base_url
 
