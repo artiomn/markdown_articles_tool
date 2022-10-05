@@ -133,11 +133,25 @@ class ArticleProcessor:
 
         return article_path, article_base_url
 
+    def _need_to_change_name(self, article_path, article_out_path) -> bool:
+        return (article_path == article_out_path or article_out_path.exists()) and not self._remove_source
+
+    @staticmethod
+    def _make_new_filename(output_path, article_file_name, file_format):
+        return output_path / f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{file_format}'
+
     def _get_article_out_path(self, article_path: Path, output_path: Path, file_format: str) -> Path:
         article_file_name = article_path.stem
-        article_out_path = output_path if output_path else article_path.parent / f'{article_file_name}.{file_format}'
 
-        if article_path == article_out_path and not self._remove_source:
-            article_out_path = article_path.parent / f'{article_file_name}_{strftime("%Y%m%d_%H%M%S")}.{file_format}'
+        if output_path.is_dir():
+            article_out_path = output_path / f'{article_file_name}.{file_format}'
+            if self._need_to_change_name(article_path, article_out_path):
+                article_out_path = self._make_new_filename(output_path, article_file_name, file_format)
+        elif output_path.is_file() or not output_path.exists():
+            article_out_path = output_path
+            if self._need_to_change_name(article_path, article_out_path):
+                article_out_path = self._make_new_filename(output_path.parent, article_file_name, file_format)
+        else:
+            raise FileNotFoundError(f'Output path "{output_path}" is incorrect!')
 
         return article_out_path

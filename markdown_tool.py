@@ -5,10 +5,13 @@ Tool for the downloading Markdown articles, replace image links and save the art
 """
 
 import argparse
+from argparse import RawDescriptionHelpFormatter, SUPPRESS, ZERO_OR_MORE, OPTIONAL
+
 from itertools import permutations
 import logging
 
 from mimetypes import types_map
+from pathlib import Path
 
 from markdown_toolset.article_processor import ArticleProcessor, DeduplicationVariant
 
@@ -19,6 +22,23 @@ from markdown_toolset.__version__ import __version__
 
 
 del types_map['.jpe']
+
+
+class CustomArgumentDefaultsHelpFormatter(RawDescriptionHelpFormatter):
+    """Help message formatter which adds default values to argument help.
+
+    Only the name of this class is considered a public API. All the methods
+    provided by the class are considered an implementation detail.
+    """
+
+    def _get_help_string(self, action):
+        help = action.help
+        if '%(default)' not in action.help:
+            if action.default is not SUPPRESS:
+                defaulting_nargs = [OPTIONAL, ZERO_OR_MORE]
+                if action.option_strings or action.nargs in defaulting_nargs:
+                    help += ' (default: %(default)s)'
+        return help
 
 
 def main(arguments):
@@ -38,9 +58,9 @@ def main(arguments):
                                  article_file_path_or_url=arguments.article_file_path_or_url,
                                  downloading_timeout=arguments.downloading_timeout,
                                  output_format=arguments.output_format,
-                                 output_path=arguments.output_path,
+                                 output_path=getattr(arguments, 'output_path', Path.cwd()),
                                  remove_source=arguments.remove_source,
-                                 images_public_path=arguments.images_public_path,
+                                 images_public_path=getattr(arguments, 'images_public_path', ''),
                                  input_formats=arguments.input_format.split('+'),
                                  skip_all_incorrect=arguments.skip_all_incorrect,
                                  deduplication_type=getattr(DeduplicationVariant, arguments.deduplication_type.upper()),
@@ -60,7 +80,7 @@ if __name__ == '__main__':
         prog='markdown_tool',
         epilog='Use this at your own risk',
         description=f'{__doc__}Version: {__version__}',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=CustomArgumentDefaultsHelpFormatter
     )
     parser.add_argument('article_file_path_or_url', type=str,
                         help='path to the article file in the Markdown format')
@@ -81,7 +101,7 @@ if __name__ == '__main__':
                         help='Replace image names, using content hash')
     parser.add_argument('-o', '--output-format', default=out_format_list[0], choices=out_format_list,
                         help='output format')
-    parser.add_argument('-p', '--images-public-path', default='',
+    parser.add_argument('-p', '--images-public-path', default=SUPPRESS,
                         help='Public path to the folder of downloaded images '
                              '(possible variables: $article_name, $time, $date, $dt, $base_url)')
     # TODO: Replace this with variables.
@@ -91,7 +111,7 @@ if __name__ == '__main__':
                         help='Remove or replace source file')
     parser.add_argument('-t', '--downloading-timeout', type=float, default=-1,
                         help='how many seconds to wait before downloading will be failed')
-    parser.add_argument('-O', '--output-path', type=str, help='article output file name')
+    parser.add_argument('-O', '--output-path', type=str, help='article output file name or path', default=SUPPRESS)
     parser.add_argument('--verbose', '-v', default=False, action='store_true',
                         help='More verbose logging')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}', help='return version number')

@@ -94,11 +94,9 @@ class ImageDownloader:
             image_filename, document_img_path = self._fix_paths(replacement_mapping, document_img_path, image_url,
                                                                 image_filename)
 
-            print('IFN-', image_filename)
             real_image_path = self._out_path_maker.get_real_path(image_url, image_filename)
             replacement_mapping.setdefault(image_url, '/'.join(document_img_path.parts))
 
-# TODO: check if image is exists.
             ImageDownloader._write_image(real_image_path, image_content)
 
         return replacement_mapping
@@ -133,7 +131,10 @@ class ImageDownloader:
         Write image data into the file.
         """
 
-        # TODO: check if image already exists.
+        if image_path.exists():
+            logging.info('Image "%s" already exists and will not be written...', image_path)
+            return
+
         logging.info('Image will be written to the file "%s"...', image_path)
         with open(image_path, 'wb') as image_file:
             image_file.write(data)
