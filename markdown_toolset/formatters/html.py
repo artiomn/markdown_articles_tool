@@ -13,6 +13,6 @@ class HTMLFormatter:
     format = 'html'
 
     @staticmethod
-    def write(lines):
+    def write(lines, **kwargs):
         md = markdown(lines, output_format='html')
         return f'<html>\n<head></head>\n<body>\n{md}\n</body>\n</html>'.encode()
