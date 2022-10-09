@@ -23,4 +23,4 @@ def format_article(article_out_path: Path, article_text: str, formatter) -> None
     logging.info('Writing file into "%s"...', article_out_path)
 
     with open(article_out_path, 'wb') as outfile:
-        outfile.write(formatter.write(article_text))
+        outfile.write(formatter.write(article_text, article_out_path=article_out_path))
