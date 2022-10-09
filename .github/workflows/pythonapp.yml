@@ -43,8 +43,23 @@ jobs:
 #    runs-on: ubuntu-latest
 #
 #    steps:
+    - name: Create new release
+        id: create_release
+        uses: juitnow/github-action-create-release@v1
+        env:
+          # This token is provided by Actions.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Release creating added to CI
+          draft: false
+          prerelease: false
+
     - name: Publish package to the PyPI
-      # if: startsWith(github.head_ref, 'releases/')
+      # Already on push in the master branch.
+      # if: startsWith(github.head_ref, 'master')
       # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
