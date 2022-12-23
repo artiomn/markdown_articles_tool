@@ -41,7 +41,6 @@ class ImageDownloader:
     def download_images(self, images: List[str]) -> dict:
         """
         Download and save images from the list.
-
         :return URL -> file path mapping.
         """
 
@@ -97,20 +96,29 @@ class ImageDownloader:
                 if not result:
                     continue
 
-            image_local_url = Path(remove_protocol_prefix(image_url)).parent.as_posix()
-            document_img_path = self._out_path_maker.get_document_img_path(image_local_url, image_filename)
-            image_filename, document_img_path = self._fix_paths(replacement_mapping, document_img_path, image_url,
-                                                                image_filename)
-
-            real_image_path = self._out_path_maker.get_real_path(image_local_url, image_filename)
-
-            logging.debug('Real image path = "%s", document image path = "%s", image filename = "%s"',
-                          real_image_path, document_img_path, image_filename)
-            replacement_mapping.setdefault(image_url, '/'.join(document_img_path.parts))
+            real_image_path = self._process_image_path(image_url, image_filename, replacement_mapping)
 
             self._write_image(real_image_path, image_content)
 
         return replacement_mapping
+
+    def _process_image_path(self, image_url, image_filename, replacement_mapping):
+        """
+        Get real image path and update replacement mapping.
+        """
+
+        image_local_url = Path(remove_protocol_prefix(image_url)).parent.as_posix()
+        document_img_path = self._out_path_maker.get_document_img_path(image_local_url, image_filename)
+        image_filename, document_img_path = self._fix_paths(replacement_mapping, document_img_path, image_url,
+                                                            image_filename)
+
+        real_image_path = self._out_path_maker.get_real_path(image_local_url, image_filename)
+
+        logging.debug('Real image path = "%s", document image path = "%s", image filename = "%s"',
+                      real_image_path, document_img_path, image_filename)
+        replacement_mapping.setdefault(image_url, '/'.join(document_img_path.parts))
+
+        return real_image_path
 
     def _make_directories(self, path: Optional[Path] = None):
         """
