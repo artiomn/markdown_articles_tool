@@ -13,6 +13,11 @@ setup(
     install_requires=requirements,
     tests_require=['pytest'],
     scripts=['markdown_tool.py'],
+    entry_points={
+        'console_scripts': [
+            'markdown_tool = markdown_tool:main',
+        ],
+    },
     # flake8: ignore=F821
     version=__version__,  # noqa
     zip_safe=False
