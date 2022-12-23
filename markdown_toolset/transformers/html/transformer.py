@@ -49,7 +49,7 @@ class ArticleTransformer:
         images = self._html_images.image_urls
         logging.info('Images links count = %d', len(images))
         images = set(images)
-        logging.info(f'Unique images links count = %d', len(images))
+        logging.info('Unique images links count = %d', len(images))
 
         return images
 

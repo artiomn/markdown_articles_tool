@@ -35,7 +35,7 @@ class TestOutPathMaker:
     def _with_hier_url_tester(self, opm, site_url, include_site_url=True):
         opm.save_hierarchy = True
 
-        image_relative_path, image_absolute_path = self._image_relative_path, f'/{self._image_relative_path}'
+        image_relative_path, _ = self._image_relative_path, f'/{self._image_relative_path}'
 
         base_image_url = f'{site_url}/{image_relative_path}' if include_site_url else image_relative_path
         image_absolute_http_url = f'http://{base_image_url}'
