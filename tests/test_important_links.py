@@ -14,7 +14,8 @@ class TestImportantLinks:
         self._incorrect_article_text =\
             'Important link to remember: ![](https://www.google.com/)\n' \
             ' ![](images/markdown_articles_tool.html)\n' \
-            ' ![](https://iiincorrect_link_url_which_doesn\'t_exists.png/image.jpg)\n'
+            ' ![](https://iiincorrect_link_url_which_doesn\'t_exists.png/image.jpg)\n\n' \
+            'My avatar scaled to 300 pixels width: ![](images/32387838.png)'
 
     def teardown(self):
         self._article_out_path.unlink()
