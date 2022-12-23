@@ -17,6 +17,8 @@ NECESSARY_HEADERS = {
 
 __protocol_prefix_replace_regex = re.compile(r'^\s*(:?(?:(?:http|ftp)+s?|file)://)', re.IGNORECASE)
 
+# TODO: Use urllib!!!
+
 
 def is_url(url: str, allowed_url_prefixes=('http', 'ftp', 'https', 'ftps')) -> bool:
     """
