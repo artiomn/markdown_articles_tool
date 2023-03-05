@@ -5,10 +5,10 @@
 [![Latest Release](https://img.shields.io/github/v/release/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/releases)
 
 
-# Markdown articles tool 0.1.2
+# Markdown articles tool 0.1.3
 
 Free command line utility, written in Python, designed to help you manage online and downloaded Markdown documents (e.g., articles).
-The Markdown Articles Tool is available for macOS, Windows, and Linux. 
+The Markdown Articles Tool is available for macOS, Windows, and Linux.
 
 Tool can be used:
 
@@ -24,23 +24,6 @@ Tool can be used:
   * Or save in the plain Markdown.
 
 Also, if you want to use separate functions, you can just import the package.
-
-
-## Changes
-
-### 0.0.8
-
-`-D` (deduplication) option was changed in the version 0.0.8. Now option is not boolean, it has several values: "disabled", "names_hashing", "content_hash".
-  Long option name was changed too: now it's `deduplication-type`.
-
-### 0.1.2
-
-- `-l, --process-local-images` deprecated from the version 0.1.2 and will not work: local images will always be processed.
-- Images with unrecognized MIME type will not be downloaded by default (use `-E` to disable this behaviour).
-- New option `-P, --prepend-images-with-path` changes image output path structure. If this option is enabled,
-  "remote" image path will be saved in the local directory structure.
-- Code was significantly refactored.
-- Some auto tests were added.
 
 
 ## Installation
@@ -120,6 +103,30 @@ Example 3 (run on a folder):
 ```
 find content/ -name "*.md" | xargs -n1 ./markdown_tool.py
 ```
+
+
+## Changes
+
+### 0.0.8
+
+`-D` (deduplication) option was changed in the version 0.0.8. Now option is not boolean, it has several values: "disabled", "names_hashing", "content_hash".
+  Long option name was changed too: now it's `deduplication-type`.
+
+
+### 0.1.2
+
+- `-l, --process-local-images` deprecated from the version 0.1.2 and will not work: local images will always be processed.
+- Images with unrecognized MIME type will not be downloaded by default (use `-E` to disable this behaviour).
+- New option `-P, --prepend-images-with-path` changes image output path structure. If this option is enabled,
+  "remote" image path will be saved in the local directory structure.
+- Code was significantly refactored.
+- Some auto tests were added.
+
+
+### 0.1.3
+
+- Mostly technical fixes, necessary to work GUI tool.
+- Now the tool has [Qt-based GUI](https://github.com/artiomn/mat_gui).
 
 
 # Internals
