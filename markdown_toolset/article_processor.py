@@ -90,6 +90,8 @@ class ArticleProcessor:
         # Format and save the article.
         format_article(article_out_path, result, self._article_formatter)
 
+        return article_out_path
+
     def _process_skip_list_file(self):
         skip_list = self._skip_list
 
