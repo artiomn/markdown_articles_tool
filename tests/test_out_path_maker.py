@@ -4,7 +4,7 @@ from markdown_toolset.out_path_maker import OutPathMaker
 
 
 class TestOutPathMaker:
-    def setup(self):
+    def setup_method(self):
         self._image_filename = 'image.png'
         self._image_relative_path = 'url/to/image'
 
