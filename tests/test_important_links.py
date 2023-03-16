@@ -6,7 +6,7 @@ from markdown_toolset.string_tools import is_binary_same
 
 
 class TestImportantLinks:
-    def setup(self):
+    def setup_method(self):
         basedir = Path(__file__).parent
         self._article_path = basedir / 'data' / 'important_links.md'
         self._article_out_path = basedir / 'playground' / 'important_links_new.md'
@@ -17,7 +17,7 @@ class TestImportantLinks:
             ' ![](https://iiincorrect_link_url_which_doesn\'t_exists.png/image.jpg)\n\n' \
             'My avatar scaled to 300 pixels width: ![](images/32387838.png)'
 
-    def teardown(self):
+    def teardown_method(self):
         self._article_out_path.unlink()
 
     def test_article_processor_save_links(self):
