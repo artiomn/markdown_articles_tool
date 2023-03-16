@@ -20,9 +20,9 @@ class TestImageDownloader:
         self._image_in_relpath = f'{self._article_images_path.name}/{self._image_filename}'
         self._out_image_filepath = self._images_out_path / self._image_filename
 
-    def teardown_method(self):
-        if self._out_image_filepath.exists():
-            self._out_image_filepath.unlink()
+    # def teardown_method(self):
+    #     if self._out_image_filepath.exists():
+    #         self._out_image_filepath.unlink()
 
     @pytest.fixture(autouse=True)
     def remove_target_image(self):

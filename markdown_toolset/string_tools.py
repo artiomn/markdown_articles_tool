@@ -22,7 +22,7 @@ def slugify(value):
 def is_binary_same(s1: BinaryIO, s2: BinaryIO, bs: int = 4096) -> bool:
     """Return True if two binary streams are the same."""
 
-    chunk = other = b''
+    chunk = other = b'-'
     while chunk or other:
         chunk = s1.read(bs)
         other = s2.read(bs)
