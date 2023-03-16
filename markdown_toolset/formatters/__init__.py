@@ -2,11 +2,16 @@ from .simple import SimpleFormatter
 from .html import HTMLFormatter
 from .helpers import format_article, get_formatter
 
+
+FORMATTERS = [SimpleFormatter, HTMLFormatter]
+
+
 try:
     from .pdf import PDFFormatter
+
+    FORMATTERS.append(PDFFormatter)
 except ModuleNotFoundError:
-    PDFFormatter = None
+    pass
 
 
-FORMATTERS = [SimpleFormatter, HTMLFormatter, PDFFormatter]
-__all__ = [FORMATTERS, get_formatter, format_article]
+__all__ = ['FORMATTERS', 'get_formatter', 'format_article']

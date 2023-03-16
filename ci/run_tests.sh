@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python3 -m pytest -v tests
+python3 -m pytest -v tests $*
