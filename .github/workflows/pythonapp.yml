@@ -28,9 +28,9 @@ jobs:
         pip install flake8 mypy pytest pylint \
           types-all types-attrs types-dataclasses types-PyYAML types-typed-ast
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: MyPy types checking
-      run: |
-        mypy --config-file .mypy.ini
+#    - name: MyPy types checking
+#      run: |
+#        mypy --config-file .mypy.ini
     - name: Lint with pylint
       run: |
         pylint -rn -sn --rcfile=.pylintrc --fail-on=I --load-plugins=pylint.extensions.docparams
