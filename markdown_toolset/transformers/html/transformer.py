@@ -4,7 +4,7 @@ Images extractor from HTML document.
 import logging
 from abc import ABC
 from html.parser import HTMLParser
-from typing import List, TextIO, Set
+from typing import List, TextIO, Dict
 
 __all__ = ['ArticleTransformer']
 
@@ -12,7 +12,7 @@ __all__ = ['ArticleTransformer']
 class HTMLImageURLGrabber(HTMLParser, ABC):
     def __init__(self):
         super().__init__()
-        self._image_urls = []
+        self._image_urls: List[str] = []
 
     def handle_starttag(self, tag, attrs):
         if 'img' == tag:
@@ -20,7 +20,7 @@ class HTMLImageURLGrabber(HTMLParser, ABC):
             for a in attrs:
                 if 'src' == a[0] and a[1] is not None:
                     img_url = a[1]
-                    logging.debug(f'Image URL: {img_url}...')
+                    logging.debug('Image URL: %s...', img_url)
                     self._image_urls.append(img_url)
                     break
 
@@ -42,14 +42,12 @@ class ArticleTransformer:
         self._start_pos = self._article_stream.tell()
         self._html_images = HTMLImageURLGrabber()
         self._image_downloader = image_downloader
-        self._replacement_mapping = {}
+        self._replacement_mapping: Dict[str, str] = {}
 
-    def _read_article(self) -> Set[str]:
+    def _read_article(self) -> List[str]:
         self._html_images.feed(self._article_stream.read())
         images = self._html_images.image_urls
         logging.info('Images links count = %d', len(images))
-        images = set(images)
-        logging.info('Unique images links count = %d', len(images))
 
         return images
 

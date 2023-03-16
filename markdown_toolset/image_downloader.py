@@ -15,7 +15,7 @@ from .www_tools import download_from_url, get_filename_from_url, is_url, remove_
 class ImageLink:
     """Downloading link or path with parameters."""
 
-    def __init__(self, link: str, new_size: Optional[Tuple[int, int]] = None):
+    def __init__(self, link: str, new_size: Optional[Tuple[Optional[int], Optional[int]]] = None):
         """
         :parameter link: link to the image.
 
@@ -24,16 +24,37 @@ class ImageLink:
         self._link = link
         self._new_size = new_size
 
-    def __str__(self) -> str:
-        return self._link
-
     @property
     def need_rescaling(self) -> bool:
-        return self._new_size is not None
+        return self._new_size is not None and (self._new_size[0] is not None or self._new_size[1] is not None)
 
     @property
     def new_size(self) -> Tuple[int, int]:
         return self._new_size
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ImageLink):
+            raise NotImplementedError
+
+        if self._link != other._link:
+            return False
+
+        if self.need_rescaling == other.need_rescaling:
+            if not self.need_rescaling:
+                return True
+
+            return self.new_size[0] == other.new_size[0] and self._new_size[1] == other.new_size[1]
+
+        return False
+
+    def __hash__(self):
+        return hash(f'{id(self)}{str(self)}{self._new_size}')
+
+    def __str__(self) -> str:
+        return self._link
+
+    def __repr__(self):
+        return f'{self.__class__.__name__} object at {hex(id(self))}: {str(self)} [{self._new_size}]'
 
 
 class ImageDownloader:
@@ -164,10 +185,19 @@ class ImageDownloader:
         self._running = False
 
     @staticmethod
-    def _rescale_image(image_content: bytes, new_size, filename):
+    def _resize_image(image_content: bytes, new_size, filename):
         img = Image.open(BytesIO(image_content))
         # img = Image.frombuffer(image_content)
-        img = img.resize(new_size)
+
+        w = new_size[0]
+        if w is None:
+            w = img.width
+
+        h = new_size[1]
+        if h is None:
+            h = img.height
+
+        img = img.resize((w, h))
         logging.debug('Saving resized image to the %s', filename)
         img.save(filename)
 
@@ -237,7 +267,7 @@ class ImageDownloader:
 
         if isinstance(image_link, ImageLink) and image_link.need_rescaling:
             logging.debug('Rescaling image to %dx%d', *image_link.new_size)
-            self._rescale_image(data, image_link.new_size, image_path)
+            self._resize_image(data, image_link.new_size, image_path)
         else:
             with open(image_path, 'wb') as image_file:
                 image_file.write(data)

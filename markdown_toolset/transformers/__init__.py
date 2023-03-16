@@ -3,4 +3,4 @@ from .html.transformer import ArticleTransformer as HTMLArticleTransformer
 
 
 TRANSFORMERS = [MarkdownArticleTransformer, HTMLArticleTransformer]
-__all__ = [TRANSFORMERS]
+__all__ = ['TRANSFORMERS']
