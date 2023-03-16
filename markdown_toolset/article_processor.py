@@ -4,7 +4,7 @@ from itertools import permutations
 from pathlib import Path
 from string import Template
 from time import strftime
-from typing import Union, List, Any
+from typing import Union, List, Any, Tuple
 
 from .article_downloader import ArticleDownloader
 from .deduplicators import DeduplicationVariant, select_deduplicator
@@ -14,8 +14,9 @@ from .image_downloader import ImageDownloader
 from .formatters import FORMATTERS, get_formatter, format_article
 from .transformers import TRANSFORMERS
 
-IN_FORMATS_LIST = [f.format for f in TRANSFORMERS if f is not None]  # type: ignore
-IN_FORMATS_LIST = [*IN_FORMATS_LIST, *('+'.join(i) for i in permutations(IN_FORMATS_LIST))]
+
+IN_FORMATS_LIST = tuple(f.format for f in TRANSFORMERS if f is not None)  # type: ignore
+IN_FORMATS_LIST = tuple(*IN_FORMATS_LIST, *('+'.join(i) for i in permutations(IN_FORMATS_LIST)))  # type: ignore
 OUT_FORMATS_LIST = [f.format for f in FORMATTERS if f is not None]  # type: ignore
 
 
@@ -31,7 +32,7 @@ class ArticleProcessor:
         output_path: Union[Path, str] = '',
         remove_source: bool = False,
         images_public_path: Union[Path, str] = '',
-        input_formats: List[str] = IN_FORMATS_LIST,
+        input_formats: Tuple[str] = IN_FORMATS_LIST,  # type: ignore
         skip_all_incorrect: bool = False,
         download_incorrect_mime: bool = False,
         deduplication_type: DeduplicationVariant = DeduplicationVariant.DISABLED,
@@ -122,7 +123,9 @@ class ArticleProcessor:
         self._running = False
         self._img_downloader.stop()
 
-    def _transform_article(self, article_path: Path, input_format_list: List[str], transformers_list: List[Any]) -> str:
+    def _transform_article(
+        self, article_path: Path, input_format_list: Tuple[str], transformers_list: List[Any]
+    ) -> str:
         """
         Download images and fix URL's.
         """

@@ -40,7 +40,7 @@ def remove_protocol_prefix(url: str) -> str:
     return __protocol_prefix_replace_regex.sub('', url)
 
 
-def download_from_url(url: str, timeout: Optional[float] = None):
+def download_from_url(url: str, timeout: float = None):
     """
     Download file from the URL.
     :param url: URL to download.
@@ -58,7 +58,8 @@ def download_from_url(url: str, timeout: Optional[float] = None):
             url, allow_redirects=True, verify=False, timeout=timeout, headers=NECESSARY_HEADERS  # nosec
         )
 
-    if response.status_code != 200:
+    if not response.ok:
+        # HTTP status code >= 400.
         raise OSError(str(response))
 
     return response
