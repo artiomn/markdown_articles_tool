@@ -30,7 +30,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: MyPy types checking
       run: |
-        mypy --config-file .mypy.ini --install-types
+        mypy --config-file .mypy.ini
     - name: Lint with pylint
       run: |
         pylint -rn -sn --rcfile=.pylintrc --fail-on=I --load-plugins=pylint.extensions.docparams
