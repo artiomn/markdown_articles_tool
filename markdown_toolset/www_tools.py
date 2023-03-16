@@ -3,17 +3,16 @@ Some functions useful for the working with URLs and network.
 """
 import logging
 
-import requests
 from typing import Optional
-import re
-import os
 from mimetypes import guess_extension
+import os
+import re
+import requests
+
 from .string_tools import slugify
 
 
-NECESSARY_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
-}
+NECESSARY_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'}
 
 __protocol_prefix_replace_regex = re.compile(r'^\s*(:?(?:(?:http|ftp)+s?|file)://)', re.IGNORECASE)
 
@@ -41,11 +40,12 @@ def remove_protocol_prefix(url: str) -> str:
     return __protocol_prefix_replace_regex.sub('', url)
 
 
-def download_from_url(url: str, timeout=None):
+def download_from_url(url: str, timeout: Optional[float] = None):
     """
     Download file from the URL.
     :param url: URL to download.
     :param timeout: timeout before fail.
+    :raise OSError: when HTTP status is not 200.
     """
 
     url = url.split()[0]
@@ -54,8 +54,9 @@ def download_from_url(url: str, timeout=None):
         response = requests.get(url, allow_redirects=True, timeout=timeout, headers=NECESSARY_HEADERS)
     except requests.exceptions.SSLError:
         logging.warning('Incorrect SSL certificate, trying to download without verifying...')
-        response = requests.get(url, allow_redirects=True, verify=False,
-                                timeout=timeout, headers=NECESSARY_HEADERS)
+        response = requests.get(
+            url, allow_redirects=True, verify=False, timeout=timeout, headers=NECESSARY_HEADERS  # nosec
+        )
 
     if response.status_code != 200:
         raise OSError(str(response))
@@ -88,8 +89,11 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
     if f_name == '':
         return None
 
-    result = f'{slugify(f_name)}{guess_extension(req.headers["content-type"].partition(";")[0].strip())}' if not f_ext\
+    result = (
+        f'{slugify(f_name)}{guess_extension(req.headers["content-type"].partition(";")[0].strip())}'
+        if not f_ext
         else f'{slugify(f_name)}.{slugify(f_ext)}'
+    )
 
     return result
 

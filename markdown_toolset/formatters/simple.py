@@ -12,4 +12,6 @@ class SimpleFormatter:
 
     @staticmethod
     def write(lines, **kwargs):
+        del kwargs
+
         return lines.encode('utf8')

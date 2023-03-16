@@ -33,7 +33,7 @@ jobs:
 #        mypy --config-file .mypy.ini
     - name: Lint with pylint
       run: |
-        pylint -rn -sn --rcfile=.pylintrc --fail-on=I --load-plugins=pylint.extensions.docparams
+        pylint -rn -sn --rcfile=.pylintrc --fail-on=I --load-plugins=pylint.extensions.docparams markdown_toolset
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

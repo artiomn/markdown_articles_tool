@@ -66,7 +66,7 @@ disable=C0111, # Missing module docstring (Any comments should be deleted on PRO
         W0511, # developers comments are disabled during refactoring (fixme todo etc)
         C0103,  # Variable name ... doesn't conform to snake_case naming style (less than 3 chars)
         C0328,  # unexpected-line-ending-format
-        W3101,  # missing-timeout
+#        W3101,  # missing-timeout
         W0201,  # attribute-defined-outside-init
         R0903,  # Too few public methods
         E0401,  # Unable to import module

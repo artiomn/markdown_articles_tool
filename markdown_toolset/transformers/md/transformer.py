@@ -15,12 +15,12 @@ from markdown_toolset.image_downloader import ImageLink
 
 
 class ImgExtractor(Treeprocessor):
-    def run(self, doc):
+    def run(self, root):
         """
         Find all images and append to markdown.images.
         """
 
-        self.md.images = [image.get('src') for image in doc.findall('.//img')]
+        self.md.images = [image.get('src') for image in root.findall('.//img')]
 
 
 class ImgExtExtension(Extension):
