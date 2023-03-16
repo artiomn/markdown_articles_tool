@@ -15,8 +15,8 @@ from .formatters import FORMATTERS, get_formatter, format_article
 from .transformers import TRANSFORMERS
 
 
-IN_FORMATS_LIST = tuple(f.format for f in TRANSFORMERS if f is not None)  # type: ignore
-IN_FORMATS_LIST = tuple(*IN_FORMATS_LIST, *('+'.join(i) for i in permutations(IN_FORMATS_LIST)))  # type: ignore
+IN_FORMATS_LIST = [f.format for f in TRANSFORMERS if f is not None]  # type: ignore
+IN_FORMATS_LIST = [*IN_FORMATS_LIST, *('+'.join(i) for i in permutations(IN_FORMATS_LIST))]  # type: ignore
 OUT_FORMATS_LIST = [f.format for f in FORMATTERS if f is not None]  # type: ignore
 
 
