@@ -37,6 +37,7 @@ class ImageDownloader:
         self._downloading_timeout = downloading_timeout if downloading_timeout > 0 else None
         self._download_incorrect_mime_types = download_incorrect_mime_types
         self._deduplicator = deduplicator
+        self._running = False
 
     def download_images(self, images: List[str]) -> dict:
         """
@@ -48,59 +49,76 @@ class ImageDownloader:
 
         images_count = len(images)
 
-        for image_num, image_url in enumerate(images):
-            assert image_url not in replacement_mapping.keys(), f'BUG: already downloaded image "{image_url}"...'
+        try:
+            self._running = True
+            for image_num, image_url in enumerate(images):
+                if not self._running:
+                    logging.debug('Images downloading was stopped forcibly')
+                    break
 
-            if self._need_to_skip_url(image_url):
-                logging.debug('Image %d downloading was skipped...', image_num + 1)
-                continue
+                assert image_url not in replacement_mapping.keys(), f'BUG: already downloaded image "{image_url}"...'
 
-            if not is_url(image_url):
-                logging.warning('Image %d ["%s"] probably has incorrect URL...', image_num + 1, image_url)
+                if self._need_to_skip_url(image_url):
+                    logging.debug('Image %d downloading was skipped...', image_num + 1)
+                    continue
 
-                if self._out_path_maker.article_base_url:
-                    logging.debug('Trying to add base URL "%s"...', self._out_path_maker.article_base_url)
-                    image_download_url = f'{self._out_path_maker.article_base_url}/{image_url}'
+                if not is_url(image_url):
+                    logging.warning('Image %d ["%s"] probably has incorrect URL...', image_num + 1, image_url)
+
+                    if self._out_path_maker.article_base_url:
+                        logging.debug('Trying to add base URL "%s"...', self._out_path_maker.article_base_url)
+                        image_download_url = f'{self._out_path_maker.article_base_url}/{image_url}'
+                    else:
+                        image_download_url = str(Path(self._out_path_maker.article_file_path).parent / image_url)
                 else:
-                    image_download_url = str(Path(self._out_path_maker.article_file_path).parent/image_url)
-            else:
-                image_download_url = image_url
+                    image_download_url = image_url
 
-            try:
-                mime_type, _ = mimetypes.guess_type(image_download_url)
-                logging.debug('"%s" MIME type = %s', image_download_url, mime_type)
+                try:
+                    mime_type, _ = mimetypes.guess_type(image_download_url)
+                    logging.debug('"%s" MIME type = %s', image_download_url, mime_type)
 
-                if not self._download_incorrect_mime_types and mime_type is None:
-                    logging.warning('Image "%s" has incorrect MIME type and will not be downloaded!',
-                                    image_download_url)
-                    continue
+                    if not self._download_incorrect_mime_types and mime_type is None:
+                        logging.warning('Image "%s" has incorrect MIME type and will not be downloaded!',
+                                        image_download_url)
+                        continue
 
-                image_filename, image_content = \
-                    self._get_remote_image(image_download_url, image_num, images_count) if is_url(image_download_url) \
-                    else ImageDownloader._get_local_image(Path(image_download_url))
+                    image_filename, image_content = \
+                        self._get_remote_image(image_download_url, image_num, images_count) if is_url(image_download_url) \
+                        else ImageDownloader._get_local_image(Path(image_download_url))
 
-                if image_filename is None:
-                    logging.warning('Empty image filename, probably this is incorrect link: "%s".', image_download_url)
-                    continue
-            except Exception as e:
-                if self._skip_all_errors:
-                    logging.warning('Can\'t get image %d, error: [%s], '
-                                    'but processing will be continued, because `skip_all_errors` flag is set',
-                                    image_num + 1, str(e))
-                    continue
-                raise
+                    if image_filename is None:
+                        logging.warning('Empty image filename, probably this is incorrect link: "%s".', image_download_url)
+                        continue
+                except Exception as e:
+                    if self._skip_all_errors:
+                        logging.warning('Can\'t get image %d, error: [%s], '
+                                        'but processing will be continued, because `skip_all_errors` flag is set',
+                                        image_num + 1, str(e))
+                        continue
+                    raise
 
-            if self._deduplicator is not None:
-                result, image_filename = self._deduplicator.deduplicate(image_url, image_filename, image_content,
-                                                                        replacement_mapping)
-                if not result:
-                    continue
+                if self._deduplicator is not None:
+                    result, image_filename = self._deduplicator.deduplicate(image_url, image_filename, image_content,
+                                                                            replacement_mapping)
+                    if not result:
+                        continue
 
-            real_image_path = self._process_image_path(image_url, image_filename, replacement_mapping)
+                real_image_path = self._process_image_path(image_url, image_filename, replacement_mapping)
 
-            self._write_image(real_image_path, image_content)
+                self._write_image(real_image_path, image_content)
+        finally:
+            logging.info('Finished images downloading.')
+            self._running = False
 
         return replacement_mapping
+
+    @property
+    def running(self) -> bool:
+        return self._running
+
+    def stop(self):
+        logging.info('Images downloading stopped.')
+        self._running = False
 
     def _process_image_path(self, image_url, image_filename, replacement_mapping):
         """
@@ -181,7 +199,7 @@ class ImageDownloader:
         for url, path in replacement_mapping.items():
             if document_img_path == path and img_url != url:
                 image_filename = f'{hashlib.md5(img_url.encode()).hexdigest()}_{image_filename}'
-                document_img_path = self._out_path_maker.get_document_img_path(image_filename)
+                document_img_path = self._out_path_maker.get_document_img_path(img_url, image_filename)
                 break
 
         return image_filename, document_img_path

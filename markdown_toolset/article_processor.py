@@ -1,9 +1,10 @@
 import logging
+from io import StringIO
 from itertools import permutations
 from pathlib import Path
 from string import Template
 from time import strftime
-from typing import Union, List
+from typing import Union, List, Any
 
 from .article_downloader import ArticleDownloader
 from .deduplicators import DeduplicationVariant, select_deduplicator
@@ -11,7 +12,7 @@ from .out_path_maker import OutPathMaker
 from .www_tools import remove_protocol_prefix
 from .image_downloader import ImageDownloader
 from .formatters import FORMATTERS, get_formatter, format_article
-from .transformers import TRANSFORMERS, transform_article
+from .transformers import TRANSFORMERS
 
 IN_FORMATS_LIST = [f.format for f in TRANSFORMERS if f is not None]
 IN_FORMATS_LIST = [*IN_FORMATS_LIST, *('+'.join(i) for i in permutations(IN_FORMATS_LIST))]
@@ -42,55 +43,89 @@ class ArticleProcessor:
         self._deduplication_type = deduplication_type
         self._images_dirname = images_dirname
         self._save_hierarchy = save_hierarchy
+        self._img_downloader = None
+        self._running = False
 
     def process(self):
-        skip_list = self._process_skip_list_file()
-        article_path, article_base_url, article_out_path = self._article_downloader.get_article()
+        try:
+            self._running = True
+            skip_list = self._process_skip_list_file()
+            article_path, article_base_url, article_out_path = self._article_downloader.get_article()
 
-        logging.info('File "%s" will be processed...', article_path)
+            logging.info('File "%s" will be processed...', article_path)
 
-        variables = {
-            'article_name': article_out_path.stem,
-            'time': strftime('%H%M%S'),
-            'date': strftime('%Y%m%d'),
-            'dt': strftime('%Y%m%d_%H%M%S'),
-            'base_url': remove_protocol_prefix(article_base_url)
-        }
+            variables = {
+                'article_name': article_out_path.stem,
+                'time': strftime('%H%M%S'),
+                'date': strftime('%Y%m%d'),
+                'dt': strftime('%Y%m%d_%H%M%S'),
+                'base_url': remove_protocol_prefix(article_base_url)
+            }
 
-        image_public_path = Template(self._images_public_path).safe_substitute(**variables)
-        logging.info('Image public path: %s', image_public_path)
+            image_public_path = Template(self._images_public_path).safe_substitute(**variables)
+            logging.info('Image public path: %s', image_public_path)
 
-        image_dir_name = Path(Template(self._images_dirname).safe_substitute(**variables))
-        image_public_path = None if not image_public_path else Path(image_public_path)
+            image_dir_name = Path(Template(self._images_dirname).safe_substitute(**variables))
+            image_public_path = None if not image_public_path else Path(image_public_path)
 
-        if self._deduplication_type == DeduplicationVariant.CONTENT_HASH:
-            deduplicator = select_deduplicator(self._deduplication_type, image_dir_name, image_public_path)
-        else:
-            deduplicator = select_deduplicator(self._deduplication_type)
+            if self._deduplication_type == DeduplicationVariant.CONTENT_HASH:
+                deduplicator = select_deduplicator(self._deduplication_type, image_dir_name, image_public_path)
+            else:
+                deduplicator = select_deduplicator(self._deduplication_type)
 
-        out_path_maker = OutPathMaker(
-            article_file_path=article_out_path,
-            article_base_url=article_base_url,
-            img_dir_name=image_dir_name,
-            img_public_path=image_public_path,
-            save_hierarchy=self._save_hierarchy
-        )
+            out_path_maker = OutPathMaker(
+                article_file_path=article_out_path,
+                article_base_url=article_base_url,
+                img_dir_name=image_dir_name,
+                img_public_path=image_public_path,
+                save_hierarchy=self._save_hierarchy
+            )
 
-        img_downloader = ImageDownloader(
-            out_path_maker=out_path_maker,
-            skip_list=skip_list,
-            skip_all_errors=self._skip_all_incorrect,
-            download_incorrect_mime_types=self._download_incorrect_mime,
-            downloading_timeout=self._downloading_timeout,
-            deduplicator=deduplicator
-        )
+            self._img_downloader = ImageDownloader(
+                out_path_maker=out_path_maker,
+                skip_list=skip_list,
+                skip_all_errors=self._skip_all_incorrect,
+                download_incorrect_mime_types=self._download_incorrect_mime,
+                downloading_timeout=self._downloading_timeout,
+                deduplicator=deduplicator
+            )
 
-        result = transform_article(article_path, self._input_formats, TRANSFORMERS, img_downloader)
+            result = self._transform_article(article_path, self._input_formats, TRANSFORMERS)
 
-        # Format and save the article.
-        format_article(article_out_path, result, self._article_formatter)
+            # Format and save the article.
+            format_article(article_out_path, result, self._article_formatter)
+        finally:
+            self._running = False
 
         return article_out_path
+
+    @property
+    def running(self) -> bool:
+        return self._running
+
+    def stop(self):
+        logging.info('Article processing stopped.')
+        self._running = False
+        self._img_downloader.stop()
+
+    def _transform_article(self, article_path: Path, input_format_list: List[str], transformers_list: List[Any]) -> str:
+        """
+        Download images and fix URL's.
+        """
+        transformers = [tr for ifmt in input_format_list
+                        for tr in transformers_list if tr is not None and tr.format == ifmt]
+
+        with open(article_path, 'r', encoding='utf8') as article_file:
+            result = StringIO(article_file.read())
+
+        for transformer in transformers:
+            if not self._running:
+                logging.debug('Article transforming was stopped forcibly.')
+                break
+            lines = transformer(result, self._img_downloader).run()
+            result = StringIO(''.join(lines))
+
+        return result.read()
 
     def _process_skip_list_file(self):
         skip_list = self._skip_list
