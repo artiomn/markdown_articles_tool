@@ -1,10 +1,9 @@
-"""
-Routines for the strings.
-"""
+"""Routines for the strings."""
 
 import re
 import unicodedata
-from typing import BinaryIO
+from pathlib import Path
+from typing import BinaryIO, Union
 
 
 def slugify(value):
@@ -20,15 +19,21 @@ def slugify(value):
     return value
 
 
-def is_binary_same(s1: BinaryIO, s2: BinaryIO, bs: int = 4096):
-    """
-    Return True if two binary streams are the same.
-    """
+def is_binary_same(s1: BinaryIO, s2: BinaryIO, bs: int = 4096) -> bool:
+    """Return True if two binary streams are the same."""
 
-    chunk = other = True
+    chunk = other = b''
     while chunk or other:
         chunk = s1.read(bs)
         other = s2.read(bs)
         if chunk != other:
             return False
     return True
+
+
+def compare_files(filename1: Union[Path, str], filename2: Union[Path, str]) -> bool:
+    """Compare files byte to byte."""
+
+    with open(filename1, 'rb') as f1:
+        with open(filename2, 'rb') as f2:
+            return is_binary_same(f1, f2)

@@ -1,12 +1,12 @@
-from enum import Enum
+from enum import IntEnum
 
 from markdown_toolset.deduplicators.content_hash_dedup import ContentHashDeduplicator
 from markdown_toolset.deduplicators.name_hash_dedup import NameHashDeduplicator
 
 
-class DeduplicationVariant(Enum):
-    DISABLED = 0,
-    NAMES_HASHING = 1,
+class DeduplicationVariant(IntEnum):
+    DISABLED = 0
+    NAMES_HASHING = 1
     CONTENT_HASH = 2
 
 
@@ -23,4 +23,4 @@ def select_deduplicator(deduplication_variant: DeduplicationVariant, *args, **kw
     return dedup_class(*args, **kwargs) if dedup_class is not None else None
 
 
-__all__ = [DeduplicationVariant, select_deduplicator]
+__all__ = ['DeduplicationVariant', 'select_deduplicator']

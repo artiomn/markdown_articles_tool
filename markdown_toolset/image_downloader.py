@@ -1,28 +1,56 @@
-import logging
 import hashlib
+import logging
 import mimetypes
+from io import BytesIO
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional, Tuple, Union, Dict
+
+from PIL import Image
 
 from .deduplicators.deduplicator import Deduplicator
 from .out_path_maker import OutPathMaker
-from .www_tools import is_url, get_filename_from_url, download_from_url, remove_protocol_prefix
+from .www_tools import download_from_url, get_filename_from_url, is_url, remove_protocol_prefix
+
+
+class ImageLink:
+    """Downloading link or path with parameters."""
+
+    def __init__(self, link: str, new_size: Optional[Tuple[int, int]] = None):
+        """
+        :parameter link: link to the image.
+
+        :parameter rescale: new image size in pixels.
+        """
+        self._link = link
+        self._new_size = new_size
+
+    def __str__(self) -> str:
+        return self._link
+
+    @property
+    def need_rescaling(self) -> bool:
+        return self._new_size is not None
+
+    @property
+    def new_size(self) -> Tuple[int, int]:
+        return self._new_size
 
 
 class ImageDownloader:
-    """
-    "Smart" images downloader.
-    """
+    """ "Smart" images downloader."""
 
-    def __init__(self,
-                 out_path_maker: OutPathMaker,
-                 skip_list: Optional[List[str]] = None,
-                 skip_all_errors: bool = False,
-                 download_incorrect_mime_types: bool = False,
-                 downloading_timeout: float = -1,
-                 deduplicator: Optional[Deduplicator] = None):
+    def __init__(
+        self,
+        out_path_maker: OutPathMaker,
+        skip_list: Optional[List[str]] = None,
+        skip_all_errors: bool = False,
+        download_incorrect_mime_types: bool = False,
+        downloading_timeout: float = -1,
+        deduplicator: Optional[Deduplicator] = None,
+    ):
         """
         :parameter out_path_maker: image local path creating strategy.
+
         :parameter skip_list: URLs of images to skip.
         :parameter skip_all_errors: if it's True, skip all errors and continue working.
         :parameter downloading_timeout: if timeout =< 0 - infinite wait for the image downloading, otherwise wait for
@@ -39,24 +67,29 @@ class ImageDownloader:
         self._deduplicator = deduplicator
         self._running = False
 
-    def download_images(self, images: List[str]) -> dict:
+    # pylint: disable=R0912(too-many-branches)
+    def download_images(self, images: List[Union[str, ImageLink]]) -> dict:
         """
         Download and save images from the list.
+
         :return URL -> file path mapping.
         """
 
-        replacement_mapping = {}
+        replacement_mapping: Dict[str, str] = {}
 
         images_count = len(images)
 
+        # TODO: Refactor this.
         try:
             self._running = True
-            for image_num, image_url in enumerate(images):
+            for image_num, image_link in enumerate(images):
                 if not self._running:
                     logging.debug('Images downloading was stopped forcibly')
                     break
 
-                assert image_url not in replacement_mapping.keys(), f'BUG: already downloaded image "{image_url}"...'
+                image_url = str(image_link)
+
+                assert image_url not in replacement_mapping, f'BUG: already downloaded image "{image_url}"...'
 
                 if self._need_to_skip_url(image_url):
                     logging.debug('Image %d downloading was skipped...', image_num + 1)
@@ -78,34 +111,44 @@ class ImageDownloader:
                     logging.debug('"%s" MIME type = %s', image_download_url, mime_type)
 
                     if not self._download_incorrect_mime_types and mime_type is None:
-                        logging.warning('Image "%s" has incorrect MIME type and will not be downloaded!',
-                                        image_download_url)
+                        logging.warning(
+                            'Image "%s" has incorrect MIME type and will not be downloaded!', image_download_url
+                        )
                         continue
 
-                    image_filename, image_content = \
-                        self._get_remote_image(image_download_url, image_num, images_count) if is_url(image_download_url) \
+                    image_filename, image_content = (
+                        self._get_remote_image(image_download_url, image_num, images_count)
+                        if is_url(image_download_url)
                         else ImageDownloader._get_local_image(Path(image_download_url))
+                    )
 
                     if image_filename is None:
-                        logging.warning('Empty image filename, probably this is incorrect link: "%s".', image_download_url)
+                        logging.warning(
+                            'Empty image filename, probably this is incorrect link: "%s".', image_download_url
+                        )
                         continue
                 except Exception as e:
                     if self._skip_all_errors:
-                        logging.warning('Can\'t get image %d, error: [%s], '
-                                        'but processing will be continued, because `skip_all_errors` flag is set',
-                                        image_num + 1, str(e))
+                        logging.warning(
+                            'Can\'t get image %d, error: [%s], '
+                            'but processing will be continued, because `skip_all_errors` flag is set',
+                            image_num + 1,
+                            str(e),
+                        )
                         continue
                     raise
 
                 if self._deduplicator is not None:
-                    result, image_filename = self._deduplicator.deduplicate(image_url, image_filename, image_content,
-                                                                            replacement_mapping)
-                    if not result:
-                        continue
+                    if not (isinstance(image_link, ImageLink) and image_link.need_rescaling):
+                        result, image_filename = self._deduplicator.deduplicate(
+                            image_url, image_filename, image_content, replacement_mapping
+                        )
+                        if not result:
+                            continue
 
                 real_image_path = self._process_image_path(image_url, image_filename, replacement_mapping)
 
-                self._write_image(real_image_path, image_content)
+                self._write_image(real_image_path, image_content, image_link)
         finally:
             logging.info('Finished images downloading.')
             self._running = False
@@ -120,28 +163,37 @@ class ImageDownloader:
         logging.info('Images downloading stopped.')
         self._running = False
 
+    @staticmethod
+    def _rescale_image(image_content: bytes, new_size, filename):
+        img = Image.open(BytesIO(image_content))
+        # img = Image.frombuffer(image_content)
+        img = img.resize(new_size)
+        logging.debug('Saving resized image to the %s', filename)
+        img.save(filename)
+
     def _process_image_path(self, image_url, image_filename, replacement_mapping):
-        """
-        Get real image path and update replacement mapping.
-        """
+        """Get real image path and update replacement mapping."""
 
         image_local_url = Path(remove_protocol_prefix(image_url)).parent.as_posix()
         document_img_path = self._out_path_maker.get_document_img_path(image_local_url, image_filename)
-        image_filename, document_img_path = self._fix_paths(replacement_mapping, document_img_path, image_url,
-                                                            image_filename)
+        image_filename, document_img_path = self._fix_paths(
+            replacement_mapping, document_img_path, image_url, image_filename
+        )
 
         real_image_path = self._out_path_maker.get_real_path(image_local_url, image_filename)
 
-        logging.debug('Real image path = "%s", document image path = "%s", image filename = "%s"',
-                      real_image_path, document_img_path, image_filename)
+        logging.debug(
+            'Real image path = "%s", document image path = "%s", image filename = "%s"',
+            real_image_path,
+            document_img_path,
+            image_filename,
+        )
         replacement_mapping.setdefault(image_url, '/'.join(document_img_path.parts))
 
         return real_image_path
 
     def _make_directories(self, path: Optional[Path] = None):
-        """
-        Create directories hierarchy, started from images directory.
-        """
+        """Create directories hierarchy, started from images directory."""
 
         try:
             dir_hier = self._out_path_maker.images_dir / path if path is not None else self._out_path_maker.images_dir
@@ -151,9 +203,7 @@ class ImageDownloader:
             pass
 
     def _need_to_skip_url(self, image_url: str) -> bool:
-        """
-        Returns True, if the image doesn't need to be downloaded.
-        """
+        """Returns True, if the image doesn't need to be downloaded."""
 
         if image_url in self._skip_list:
             logging.debug('Image ["%s"] was skipped, because it\'s in the skip list...', image_url)
@@ -174,10 +224,8 @@ class ImageDownloader:
 
         return image_path.name, image_content
 
-    def _write_image(self, image_path: Path, data: bytes):
-        """
-        Write image data into the file.
-        """
+    def _write_image(self, image_path: Path, data: bytes, image_link: Union[ImageLink, str]):
+        """Write image data into the file."""
 
         if image_path.exists():
             logging.info('Image "%s" already exists and will not be written...', image_path)
@@ -186,19 +234,22 @@ class ImageDownloader:
         self._make_directories(image_path.parent)
 
         logging.info('Image will be written to the file "%s"...', image_path)
-        with open(image_path, 'wb') as image_file:
-            image_file.write(data)
-            image_file.close()
+
+        if isinstance(image_link, ImageLink) and image_link.need_rescaling:
+            logging.debug('Rescaling image to %dx%d', *image_link.new_size)
+            self._rescale_image(data, image_link.new_size, image_path)
+        else:
+            with open(image_path, 'wb') as image_file:
+                image_file.write(data)
+                image_file.close()
 
     def _fix_paths(self, replacement_mapping, document_img_path, img_url, image_filename):
-        """
-        Fix path if a file with the similar name exists already.
-        """
+        """Fix path if a file with the similar name exists already."""
 
         # Images can have similar name, but different URLs, but I want to save original filename, if possible.
         for url, path in replacement_mapping.items():
             if document_img_path == path and img_url != url:
-                image_filename = f'{hashlib.md5(img_url.encode()).hexdigest()}_{image_filename}'
+                image_filename = f'{hashlib.sha256(img_url.encode()).hexdigest()}_{image_filename}'
                 document_img_path = self._out_path_maker.get_document_img_path(img_url, image_filename)
                 break
 
