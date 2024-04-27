@@ -20,6 +20,14 @@ class TestImageDownloader:
         self._image_in_relpath = f'{self._article_images_path.name}/{self._image_filename}'
         self._out_image_filepath = self._images_out_path / self._image_filename
 
+        self._out_path_maker = OutPathMaker(
+            article_file_path=self._article_out_path,
+            article_base_url=str(self._article_base_path),
+            img_dir_name=self._images_out_path,
+            img_public_path=Path('images'),
+            save_hierarchy=False,
+        )
+
     def teardown_method(self):
         self._out_image_filepath.unlink(missing_ok=True)
 
@@ -29,16 +37,8 @@ class TestImageDownloader:
         yield
 
     def test_local_downloading(self):
-        out_path_maker = OutPathMaker(
-            article_file_path=self._article_out_path,
-            article_base_url=str(self._article_base_path),
-            img_dir_name=self._images_out_path,
-            img_public_path=Path('images'),
-            save_hierarchy=False,
-        )
-
         image_downloader = ImageDownloader(
-            out_path_maker=out_path_maker,
+            out_path_maker=self._out_path_maker,
             skip_list=[],
             skip_all_errors=False,
             download_incorrect_mime_types=True,
@@ -51,16 +51,8 @@ class TestImageDownloader:
         assert compare_files(self._article_images_path / self._image_filename, self._out_image_filepath)
 
     def test_resizing(self):
-        out_path_maker = OutPathMaker(
-            article_file_path=self._article_out_path,
-            article_base_url=str(self._article_base_path),
-            img_dir_name=self._images_out_path,
-            img_public_path=Path('images'),
-            save_hierarchy=False,
-        )
-
         image_downloader = ImageDownloader(
-            out_path_maker=out_path_maker,
+            out_path_maker=self._out_path_maker,
             skip_list=[],
             skip_all_errors=False,
             download_incorrect_mime_types=True,
@@ -73,6 +65,6 @@ class TestImageDownloader:
         image_downloader.download_images([ImageLink(self._image_in_relpath, new_size=(w, h))])
 
         assert not compare_files(self._article_images_path / self._image_filename, self._out_image_filepath)
-        img = Image.open(self._out_image_filepath)
-        assert img.width == w
-        assert img.height == h
+        with Image.open(self._out_image_filepath) as img:
+            assert img.width == w
+            assert img.height == h
