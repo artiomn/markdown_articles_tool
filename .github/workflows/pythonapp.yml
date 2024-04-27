@@ -25,9 +25,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 mypy pytest pylint \
-          types-all types-attrs types-dataclasses types-PyYAML types-typed-ast
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
     - name: MyPy types checking
       run: |
         mypy --config-file .mypy.ini markdown_toolset
