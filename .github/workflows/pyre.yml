@@ -42,5 +42,5 @@ jobs:
         with:
           # To customize these inputs:
           # See https://github.com/facebook/pyre-action#inputs
-          repo-directory: './markdown_toolset'
+          repo-directory: './'
           requirements-path: 'requirements.txt'
