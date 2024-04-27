@@ -9,7 +9,8 @@ from PIL import Image
 
 from .deduplicators.deduplicator import Deduplicator
 from .out_path_maker import OutPathMaker
-from .www_tools import download_from_url, get_filename_from_url, is_url, remove_protocol_prefix
+from .www_tools import download_from_url, get_filename_from_url, is_url, remove_protocol_prefix, split_file_ext
+from .string_tools import is_binary_same
 
 
 class ImageLink:
@@ -68,6 +69,7 @@ class ImageDownloader:
         download_incorrect_mime_types: bool = False,
         downloading_timeout: float = -1,
         deduplicator: Optional[Deduplicator] = None,
+        replace_image_names: bool = False,
     ):
         """
         :parameter out_path_maker: image local path creating strategy.
@@ -78,6 +80,7 @@ class ImageDownloader:
                                         `downloading_timeout` seconds.
         :parameter download_incorrect_mime_types: download images even if MIME type can't be identified.
         :parameter deduplicator: file deduplicator object.
+        :parameter replace_image_names: replace image names with hash.
         """
 
         self._out_path_maker = out_path_maker
@@ -87,6 +90,7 @@ class ImageDownloader:
         self._download_incorrect_mime_types = download_incorrect_mime_types
         self._deduplicator = deduplicator
         self._running = False
+        self._replace_image_names = replace_image_names
 
     # pylint: disable=R0912(too-many-branches)
     def download_images(self, images: List[Union[str, ImageLink]]) -> dict:
@@ -152,6 +156,13 @@ class ImageDownloader:
                             'Empty image filename, probably this is incorrect link: "%s".', image_download_url
                         )
                         continue
+
+                    if self._replace_image_names:
+                        _, image_ext = split_file_ext(image_filename)
+                        image_content_hash = hashlib.sha384(image_content).hexdigest()
+                        logging.debug('Image content hash: %s', image_filename)
+                        image_filename = f'{image_content_hash}.{image_ext}'
+
                 except Exception as e:
                     if self._skip_all_errors:
                         logging.warning(
@@ -171,8 +182,24 @@ class ImageDownloader:
                         if not result:
                             continue
 
-                real_image_path = self._process_image_path(image_url, image_filename, replacement_mapping)
+                image_local_url, real_image_path = self._get_real_path(image_url, image_filename)
 
+                if self._replace_image_names and real_image_path.exists():
+                    # Image by this content hash exists, but possibly this is a collision.
+                    with open(real_image_path, 'rb') as real_file:
+                        if not is_binary_same(real_file, BytesIO(image_content)):
+                            # Fix collision, changing name.
+                            img_num: int = 0
+                            while real_image_path.exists():
+                                numerated_image_filename = f'{image_num}{image_filename}'
+                                real_image_path = self._out_path_maker.get_real_path(
+                                    image_local_url, numerated_image_filename
+                                )
+                                img_num += 1
+
+                            image_filename = numerated_image_filename
+
+                self._update_mapping(image_url, image_local_url, image_filename, replacement_mapping)
                 self._write_image(real_image_path, image_content, image_link)
         finally:
             logging.info('Finished images downloading.')
@@ -205,26 +232,28 @@ class ImageDownloader:
         logging.debug('Saving resized image to the %s', filename)
         img.save(filename)
 
-    def _process_image_path(self, image_url, image_filename, replacement_mapping):
-        """Get real image path and update replacement mapping."""
-
+    def _get_real_path(self, image_url, image_filename):
+        """Get real image path."""
         image_local_url = Path(remove_protocol_prefix(image_url)).parent.as_posix()
+        real_image_path = self._out_path_maker.get_real_path(image_local_url, image_filename)
+
+        logging.debug('Real image path = "%s", image filename = "%s"', real_image_path, image_filename)
+
+        return image_local_url, real_image_path
+
+    def _update_mapping(self, image_url, image_local_url, image_filename, replacement_mapping):
+        """Update replacement mapping."""
         document_img_path = self._out_path_maker.get_document_img_path(image_local_url, image_filename)
         image_filename, document_img_path = self._fix_paths(
             replacement_mapping, document_img_path, image_url, image_filename
         )
-
-        real_image_path = self._out_path_maker.get_real_path(image_local_url, image_filename)
+        replacement_mapping.setdefault(image_url, '/'.join(document_img_path.parts))
 
         logging.debug(
-            'Real image path = "%s", document image path = "%s", image filename = "%s"',
-            real_image_path,
+            'Document image path = "%s", image filename = "%s"',
             document_img_path,
             image_filename,
         )
-        replacement_mapping.setdefault(image_url, '/'.join(document_img_path.parts))
-
-        return real_image_path
 
     def _make_directories(self, path: Optional[Path] = None):
         """Create directories hierarchy, started from images directory."""

@@ -3,7 +3,7 @@ Some functions useful for the working with URLs and network.
 """
 import logging
 
-from typing import Optional
+from typing import Optional, Tuple
 from mimetypes import guess_extension
 import re
 from urllib.parse import urlparse, urlunparse
@@ -65,6 +65,18 @@ def download_from_url(url: str, timeout: float = None):
     return response
 
 
+def split_file_ext(file_name: str) -> Tuple[str, str]:
+    """
+    Split filename to the name and extension.
+    """
+    name, ext = (
+        (name_and_ext := file_name.rsplit('.', 1)),
+        (*name_and_ext, None) if len(name_and_ext) == 1 else name_and_ext,
+    )[1:][0]
+
+    return name, ext
+
+
 def get_filename_from_url(req: requests.Response) -> Optional[str]:
     """
     Get filename from url and, if not found, try to get from content-disposition.
@@ -90,10 +102,7 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
 
         result = file_name[0]
 
-    f_name, f_ext = (
-        (name_and_ext := result.rsplit('.', 1)),
-        (*name_and_ext, None) if len(name_and_ext) == 1 else name_and_ext,
-    )[1:][0]
+    f_name, f_ext = split_file_ext(result)
 
     if f_name == '':
         return None

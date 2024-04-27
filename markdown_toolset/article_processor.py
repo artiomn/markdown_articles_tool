@@ -38,6 +38,7 @@ class ArticleProcessor:
         deduplication_type: DeduplicationVariant = DeduplicationVariant.DISABLED,
         images_dirname: Union[Path, str] = 'images',
         save_hierarchy: bool = False,
+        replace_image_names: bool = False,
     ):
         self._article_formatter = get_formatter(output_format, FORMATTERS)
         self._article_downloader = ArticleDownloader(
@@ -60,6 +61,7 @@ class ArticleProcessor:
         self._save_hierarchy = save_hierarchy
         self._img_downloader = None
         self._running = False
+        self._replace_image_names = replace_image_names
 
     def process(self):
         try:
@@ -103,6 +105,7 @@ class ArticleProcessor:
                 download_incorrect_mime_types=self._download_incorrect_mime,
                 downloading_timeout=self._downloading_timeout,
                 deduplicator=deduplicator,
+                replace_image_names=self._replace_image_names,
             )
 
             result = self._transform_article(article_path, self._input_formats, TRANSFORMERS)
