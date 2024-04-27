@@ -33,14 +33,14 @@ jobs:
       security-events: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
       - name: Run Pyre
-        uses: facebook/pyre-action@60697a7858f7cc8470d8cc494a3cf2ad6b06560d
+        uses: facebook/pyre-action@v0.0.2
         with:
           # To customize these inputs:
           # See https://github.com/facebook/pyre-action#inputs
-          repo-directory: './'
+          repo-directory: './markdown_toolset'
           requirements-path: 'requirements.txt'
