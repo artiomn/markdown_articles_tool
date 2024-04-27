@@ -1,4 +1,5 @@
 markdown==3.2.1
 pillow==10.3.0
 requests==2.31.0
+types-markdown==3.6.0.20240316
 weasyprint==51
