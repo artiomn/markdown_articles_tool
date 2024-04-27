@@ -1,0 +1,6 @@
+{
+  "source_directories": [
+    "."
+  ],
+  exclude: ["install_git_hooks.py"]
+}
