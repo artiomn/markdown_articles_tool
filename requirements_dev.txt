@@ -1,1 +1,11 @@
+flake8
+mypy
 pre-commit==2.20.0
+pylint
+pytest
+types-all
+types-attrs
+types-dataclasses
+types-markdown
+types-PyYAML
+types-typed-ast
