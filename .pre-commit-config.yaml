@@ -107,11 +107,11 @@ repos:
     hooks:
       - id: pyupgrade
 
-#  - repo: https://github.com/ambv/black
-#    rev: "22.12.0"
-#    hooks:
-#      - id: black
-#        args: ["-l", "120", "--skip-string-normalization" ]
+  - repo: https://github.com/ambv/black
+    rev: "22.12.0"
+    hooks:
+      - id: black
+        args: ["-l", "120", "--skip-string-normalization" ]
 
 #  - repo: https://github.com/DanielNoord/pydocstringformatter
 #    rev: v0.7.2
