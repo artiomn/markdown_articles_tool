@@ -137,11 +137,15 @@ class ImageDownloader:
                         )
                         continue
 
+                    logging.debug('Image is URL: %s', is_url(image_download_url))
+
                     image_filename, image_content = (
                         self._get_remote_image(image_download_url, image_num, images_count)
                         if is_url(image_download_url)
                         else ImageDownloader._get_local_image(Path(image_download_url))
                     )
+
+                    logging.debug('Guessed image filename: %s', image_filename)
 
                     if image_filename is None:
                         logging.warning(

@@ -7,6 +7,7 @@ from typing import Optional
 from mimetypes import guess_extension
 import os
 import re
+from urllib.parse import urlparse, urlunparse
 import requests
 
 from .string_tools import slugify
@@ -15,8 +16,7 @@ from .string_tools import slugify
 NECESSARY_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'}
 
 __protocol_prefix_replace_regex = re.compile(r'^\s*(:?(?:(?:http|ftp)+s?|file)://)', re.IGNORECASE)
-
-# TODO: Use urllib!!!
+__protocol_prefix_slashes_replace_regex = re.compile(r'^\s*:?//', re.IGNORECASE)
 
 
 def is_url(url: str, allowed_url_prefixes=('http', 'ftp', 'https', 'ftps')) -> bool:
@@ -37,7 +37,7 @@ def remove_protocol_prefix(url: str) -> str:
     Remove prefixes like http, ftp, HTTPS, and other from the URL.
     """
 
-    return __protocol_prefix_replace_regex.sub('', url)
+    return __protocol_prefix_slashes_replace_regex.sub('', str(urlunparse(urlparse(url)._replace(scheme=''))))
 
 
 def download_from_url(url: str, timeout: float = None):
@@ -48,6 +48,7 @@ def download_from_url(url: str, timeout: float = None):
     :raise OSError: when HTTP status is not 200.
     """
 
+    # todo: Add urlparse()?
     url = url.split()[0]
 
     try:
@@ -70,8 +71,11 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
     Get filename from url and, if not found, try to get from content-disposition.
     """
 
+    logging.debug('URL from request: %s', req.url)
+
     if req and req.url.find('/'):
-        result = req.url.rsplit('/', 1)[1]
+        result = urlparse(req.url).path
+        logging.debug('Filename from URL: %s', result)
     else:
         cd = req.headers.get('content-disposition')
 
@@ -79,6 +83,8 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
             return None
 
         file_name = re.findall('filename=(.+)', cd)
+
+        logging.debug('Filename from "filename=" part: %s', file_name)
 
         if len(file_name) == 0:
             return None
