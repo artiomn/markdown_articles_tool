@@ -22,7 +22,6 @@ def is_url(url: str, allowed_url_prefixes=('http', 'ftp', 'https', 'ftps')) -> b
     """
     Check url for prefix match.
     """
-
     l_url = url.lower()
     for prefix in set(allowed_url_prefixes):
         if l_url.startswith(prefix.lower()):
@@ -42,6 +41,7 @@ def remove_protocol_prefix(url: str) -> str:
 def download_from_url(url: str, timeout: float = None):
     """
     Download file from the URL.
+
     :param url: URL to download.
     :param timeout: timeout before fail.
     :raise OSError: when HTTP status is not 200.
@@ -111,7 +111,6 @@ def get_base_url(req: requests.Response) -> Optional[str]:
     """
     Get base URL from url.
     """
-
     if req and req.url.find('/'):
         return req.url.rsplit('/', 1)[0]
 
