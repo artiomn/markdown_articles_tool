@@ -82,7 +82,7 @@ class TestImageDownloader:
         )
 
         with open(self._article_images_path / self._image_filename, 'rb') as image_file:
-            image_hash = hashlib.sha384(image_file.read()).hexdigest()
+            image_hash = hashlib.sha256(image_file.read()).hexdigest()
 
         image_downloader.download_images([self._image_in_relpath])
 

@@ -61,7 +61,7 @@ class ImageLink:
 class ImageDownloader:
     """ "Smart" images downloader."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         out_path_maker: OutPathMaker,
         skip_list: Optional[List[str]] = None,
@@ -92,7 +92,7 @@ class ImageDownloader:
         self._running = False
         self._replace_image_names = replace_image_names
 
-    # pylint: disable=R0912(too-many-branches)
+    # pylint: disable=R0912(too-many-branches),too-many-arguments
     def download_images(self, images: List[Union[str, ImageLink]]) -> dict:
         """
         Download and save images from the list.
@@ -101,7 +101,6 @@ class ImageDownloader:
         """
 
         replacement_mapping: Dict[str, str] = {}
-
         images_count = len(images)
 
         # TODO: Refactor this.
@@ -116,20 +115,10 @@ class ImageDownloader:
 
                 assert image_url not in replacement_mapping, f'BUG: already downloaded image "{image_url}"...'
 
-                if self._need_to_skip_url(image_url):
-                    logging.debug('Image %d downloading was skipped...', image_num + 1)
+                image_download_url = self._get_image_download_url(image_url, image_num)
+
+                if image_download_url is None:
                     continue
-
-                if not is_url(image_url):
-                    logging.warning('Image %d ["%s"] probably has incorrect URL...', image_num + 1, image_url)
-
-                    if self._out_path_maker.article_base_url:
-                        logging.debug('Trying to add base URL "%s"...', self._out_path_maker.article_base_url)
-                        image_download_url = f'{self._out_path_maker.article_base_url}/{image_url}'
-                    else:
-                        image_download_url = str(Path(self._out_path_maker.article_file_path).parent / image_url)
-                else:
-                    image_download_url = image_url
 
                 try:
                     mime_type, _ = mimetypes.guess_type(image_download_url)
@@ -158,10 +147,7 @@ class ImageDownloader:
                         continue
 
                     if self._replace_image_names:
-                        _, image_ext = split_file_ext(image_filename)
-                        image_content_hash = hashlib.sha384(image_content).hexdigest()
-                        logging.debug('Image content hash: %s', image_filename)
-                        image_filename = f'{image_content_hash}.{image_ext}'
+                        image_filename = self._get_hashed_image_name(image_filename, image_content)
 
                 except Exception as e:
                     if self._skip_all_errors:
@@ -185,19 +171,9 @@ class ImageDownloader:
                 image_local_url, real_image_path = self._get_real_path(image_url, image_filename)
 
                 if self._replace_image_names and real_image_path.exists():
-                    # Image by this content hash exists, but possibly this is a collision.
-                    with open(real_image_path, 'rb') as real_file:
-                        if not is_binary_same(real_file, BytesIO(image_content)):
-                            # Fix collision, changing name.
-                            img_num: int = 0
-                            while real_image_path.exists():
-                                numerated_image_filename = f'{image_num}{image_filename}'
-                                real_image_path = self._out_path_maker.get_real_path(
-                                    image_local_url, numerated_image_filename
-                                )
-                                img_num += 1
-
-                            image_filename = numerated_image_filename
+                    image_local_url, real_image_path, image_filename = self._fix_name_collision(
+                        image_url, image_filename, image_content
+                    )
 
                 self._update_mapping(image_url, image_local_url, image_filename, replacement_mapping)
                 self._write_image(real_image_path, image_content, image_link)
@@ -214,6 +190,24 @@ class ImageDownloader:
     def stop(self):
         logging.info('Images downloading stopped.')
         self._running = False
+
+    def _get_image_download_url(self, image_url: str, image_num: int) -> Optional[str]:
+        if self._need_to_skip_url(image_url):
+            logging.debug('Image %d downloading was skipped...', image_num + 1)
+            return None
+
+        if not is_url(image_url):
+            logging.warning('Image %d ["%s"] probably has incorrect URL...', image_num + 1, image_url)
+
+            if self._out_path_maker.article_base_url:
+                logging.debug('Trying to add base URL "%s"...', self._out_path_maker.article_base_url)
+                image_download_url = f'{self._out_path_maker.article_base_url}/{image_url}'
+            else:
+                image_download_url = str(Path(self._out_path_maker.article_file_path).parent / image_url)
+        else:
+            image_download_url = image_url
+
+        return image_download_url
 
     @staticmethod
     def _resize_image(image_content: bytes, new_size, filename):
@@ -308,7 +302,6 @@ class ImageDownloader:
 
     def _fix_paths(self, replacement_mapping, document_img_path, img_url, image_filename):
         """Fix path if a file with the similar name exists already."""
-
         # Images can have similar name, but different URLs, but I want to save original filename, if possible.
         for url, path in replacement_mapping.items():
             if document_img_path == path and img_url != url:
@@ -317,3 +310,32 @@ class ImageDownloader:
                 break
 
         return image_filename, document_img_path
+
+    def _fix_name_collision(self, image_url, image_filename, image_content):
+        """Fix possibly collision between file names"""
+        image_local_url, real_image_path = self._get_real_path(image_url, image_filename)
+
+        with open(real_image_path, 'rb') as real_file:
+            if not is_binary_same(real_file, BytesIO(image_content)):
+                # Fix collision, changing name.
+                img_num: int = 0
+                while real_image_path.exists():
+                    numerated_image_filename = f'{img_num}{image_filename}'
+                    real_image_path = self._out_path_maker.get_real_path(image_local_url, numerated_image_filename)
+                    img_num += 1
+
+                image_filename = numerated_image_filename
+
+                return *self._get_real_path(image_url, image_filename), image_filename
+
+        return image_url, real_image_path, image_filename
+
+    @staticmethod
+    def _get_hashed_image_name(image_filename, image_content) -> str:
+        """
+        Get filename from the image content.
+        """
+        _, image_ext = split_file_ext(image_filename)
+        image_content_hash = hashlib.sha256(image_content).hexdigest()
+        logging.debug('Image content hash: %s', image_filename)
+        return f'{image_content_hash}.{image_ext}'
