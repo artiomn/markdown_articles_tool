@@ -3,7 +3,7 @@
 import re
 import unicodedata
 from pathlib import Path
-from typing import BinaryIO, Union
+from typing import BinaryIO, Union, TextIO, List, Dict
 
 
 def slugify(value):
@@ -37,3 +37,15 @@ def compare_files(filename1: Union[Path, str], filename2: Union[Path, str]) -> b
     with open(filename1, 'rb') as f1:
         with open(filename2, 'rb') as f2:
             return is_binary_same(f1, f2)
+
+
+def replace_strings(replacement_mapping: Dict[str, str], text_stream: TextIO) -> List[str]:
+    """Replace strings in the stream, using mapping."""
+
+    lines = []
+    for line in text_stream:
+        for src, target in replacement_mapping.items():
+            line = line.replace(src, str(target))
+        lines.append(line)
+
+    return lines

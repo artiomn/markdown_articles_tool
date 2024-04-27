@@ -9,9 +9,11 @@ import markdown
 from markdown.treeprocessors import Treeprocessor
 from markdown.extensions import Extension
 
-__all__ = ['ArticleTransformer']
+from ...image_downloader import ImageLink
+from ...string_tools import replace_strings
 
-from markdown_toolset.image_downloader import ImageLink
+
+__all__ = ['ArticleTransformer']
 
 
 class ImgExtractor(Treeprocessor):
@@ -82,12 +84,5 @@ class ArticleTransformer:
 
     def _fix_document_urls(self) -> List[str]:
         logging.debug('Replacing images urls in the document...')
-        replacement_mapping = self._replacement_mapping
-        lines = []
         self._article_stream.seek(self._start_pos)
-        for line in self._article_stream:
-            for src, target in replacement_mapping.items():
-                line = line.replace(src, str(target))
-            lines.append(line)
-
-        return lines
+        return replace_strings(self._replacement_mapping, self._article_stream)

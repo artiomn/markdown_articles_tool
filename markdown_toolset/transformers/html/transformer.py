@@ -8,6 +8,8 @@ from typing import List, TextIO, Dict
 
 __all__ = ['ArticleTransformer']
 
+from ...string_tools import replace_strings
+
 
 class HTMLImageURLGrabber(HTMLParser, ABC):
     def __init__(self):
@@ -53,15 +55,8 @@ class ArticleTransformer:
 
     def _fix_document_urls(self) -> List[str]:
         logging.debug('Replacing images urls in the document...')
-        replacement_mapping = self._replacement_mapping
-        lines = []
         self._article_stream.seek(self._start_pos)
-        for line in self._article_stream:
-            for src, target in replacement_mapping.items():
-                line = line.replace(src, str(target))
-            lines.append(line)
-
-        return lines
+        return replace_strings(self._replacement_mapping, self._article_stream)
 
     def run(self):
         """
