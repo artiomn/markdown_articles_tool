@@ -2,7 +2,6 @@
 Some functions useful for the working with URLs and network.
 """
 import logging
-from pathlib import Path
 
 from typing import Optional
 from mimetypes import guess_extension
@@ -91,7 +90,10 @@ def get_filename_from_url(req: requests.Response) -> Optional[str]:
 
         result = file_name[0]
 
-    _, f_name, f_ext = ((p := Path(result)), p.stem, p.name)
+    f_name, f_ext = (
+        (name_and_ext := result.rsplit('.', 1)),
+        (*name_and_ext, None) if len(name_and_ext) == 1 else name_and_ext,
+    )[1:][0]
 
     if f_name == '':
         return None
