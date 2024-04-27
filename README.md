@@ -86,19 +86,19 @@ options:
   --version             return version number
 ```
 
-Example 1:
+Run example 1:
 
 ```
 ./markdown_tool.py nc-1-zfs/article.md
 ```
 
-Example 2:
+Run example 2:
 
 ```
 ./markdown_tool.py not-nas/sov/article.md -o html -s "http://www.ossec.net/_images/ossec-arch.jpg" -a
 ```
 
-Example 3 (run on a folder):
+Run example 3 (run on a folder):
 
 ```
 find content/ -name "*.md" | xargs -n1 ./markdown_tool.py
@@ -107,10 +107,10 @@ find content/ -name "*.md" | xargs -n1 ./markdown_tool.py
 
 ## Changes
 
-### 0.0.8
+### 0.1.3
 
-`-D` (deduplication) option was changed in the version 0.0.8. Now option is not boolean, it has several values: "disabled", "names_hashing", "content_hash".
-  Long option name was changed too: now it's `deduplication-type`.
+- Mostly technical fixes, necessary to work GUI tool.
+- Now the tool has [Qt-based GUI](https://github.com/artiomn/mat_gui).
 
 
 ### 0.1.2
@@ -123,10 +123,10 @@ find content/ -name "*.md" | xargs -n1 ./markdown_tool.py
 - Some auto tests were added.
 
 
-### 0.1.3
+### 0.0.8
 
-- Mostly technical fixes, necessary to work GUI tool.
-- Now the tool has [Qt-based GUI](https://github.com/artiomn/mat_gui).
+`-D` (deduplication) option was changed in the version 0.0.8. Now option is not boolean, it has several values: "disabled", "names_hashing", "content_hash".
+  Long option name was changed too: now it's `deduplication-type`.
 
 
 # Internals
