@@ -65,6 +65,7 @@ def main(arguments):
         deduplication_type=getattr(DeduplicationVariant, arguments.deduplication_type.upper()),
         images_dirname=arguments.images_dirname,
         save_hierarchy=arguments.prepend_images_with_path,
+        replace_image_names=arguments.replace_image_names,
     )
 
     processor.process()

@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -68,3 +69,21 @@ class TestImageDownloader:
         with Image.open(self._out_image_filepath) as img:
             assert img.width == w
             assert img.height == h
+
+    def test_names_replacing(self):
+        image_downloader = ImageDownloader(
+            out_path_maker=self._out_path_maker,
+            skip_list=[],
+            skip_all_errors=False,
+            download_incorrect_mime_types=True,
+            downloading_timeout=-1,
+            deduplicator=None,
+            replace_image_names=True,
+        )
+
+        with open(self._article_images_path / self._image_filename, 'rb') as image_file:
+            image_hash = hashlib.sha384(image_file.read()).hexdigest()
+
+        image_downloader.download_images([self._image_in_relpath])
+
+        assert (self._images_out_path / f'{image_hash}.png').exists()
