@@ -3,6 +3,7 @@
 [![Stargazers](https://img.shields.io/github/stars/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/stargazers)
 [![Forks](https://img.shields.io/github/forks/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/network/members)
 [![Latest Release](https://img.shields.io/github/v/release/artiomn/markdown_images_downloader.svg)](https://github.com/artiomn/markdown_images_downloader/releases)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/artiomn/markdown_articles_tool)
 
 
 # Markdown articles tool 0.1.3
