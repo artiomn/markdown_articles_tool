@@ -16,5 +16,5 @@ class HTMLFormatter:
     def write(lines, **kwargs):
         del kwargs
 
-        md = markdown(lines, output_format='html')
+        md = markdown(lines, output_format='html', extensions=['fenced_code', 'tables', 'codehilite'])
         return f'<html>\n<head></head>\n<body>\n{md}\n</body>\n</html>'.encode()
