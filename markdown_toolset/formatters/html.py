@@ -31,9 +31,9 @@ class HTMLFormatter:
     def write(lines, **kwargs):
         del kwargs
 
-        html_formatter = CustomHtmlFormatter()
+        hl_extension = CodeHiliteExtension(pygments_formatter=CustomHtmlFormatter)
         md = markdown(lines, output_format='html', extensions=['fenced_code',
-                                                               CodeHiliteExtension(pygments_formatter=html_formatter),
+                                                               hl_extension,
                                                                'tables', 'toc'])
-        return f'<html>\n<head><style>\n{html_formatter.get_style_defs()}\n</style></head>\n' \
+        return f'<html>\n<head><style>\n{CustomHtmlFormatter().get_style_defs()}\n</style></head>\n' \
                f'<body>\n{md}\n</body>\n</html>'.encode()
