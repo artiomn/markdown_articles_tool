@@ -11,7 +11,7 @@ exec(v)
 
 setup(
     install_requires=requirements,
-    tests_require=['pytest==7.2.2'],
+    tests_require=['pytest==9.0.3'],
     scripts=['markdown_tool.py'],
     entry_points={
         'console_scripts': [
