@@ -1,6 +1,7 @@
 """
 PDF formatter.
 """
+
 from pathlib import Path
 
 from markdown import markdown
