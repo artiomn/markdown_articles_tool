@@ -2,4 +2,5 @@ pillow==12.2.0
 requests==2.33.0
 markdown==3.10.2
 weasyprint==68.0
-
+python-docx==1.2.0
+bs4==0.0.2

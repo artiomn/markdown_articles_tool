@@ -1,9 +1,10 @@
 from .simple import SimpleFormatter
 from .html import HTMLFormatter
+from .docx import DOCXFormatter
 from .helpers import format_article, get_formatter
 
 
-FORMATTERS = [SimpleFormatter, HTMLFormatter]
+FORMATTERS = [SimpleFormatter, HTMLFormatter, DOCXFormatter]
 
 
 try:
