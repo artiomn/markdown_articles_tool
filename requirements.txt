@@ -1,4 +1,4 @@
 markdown==3.8.1
-pillow==10.3.0
-requests==2.32.4
-weasyprint==51
+pillow==12.1.1
+requests==2.33.0
+weasyprint==68.0
