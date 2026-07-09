@@ -44,7 +44,8 @@ class ArticleTransformer:
         self._image_downloader = image_downloader
         self._article_stream = article_stream
         self._start_pos = self._article_stream.tell()
-        self._md_conv = markdown.Markdown(extensions=[ImgExtExtension(), 'md_in_html'])
+        self._md_conv = markdown.Markdown(extensions=[ImgExtExtension(),
+                                                      'fenced_code', 'tables', 'codehilite', 'md_in_html'])
         self._md_conv.images = []  # type: ignore
         self._replacement_mapping: Dict[str, str] = {}
 
