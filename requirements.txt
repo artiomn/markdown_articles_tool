@@ -1,4 +1,4 @@
-pillow==12.2.0
+pillow==12.3.0
 requests==2.33.0
 markdown==3.10.2
 weasyprint==68.0
