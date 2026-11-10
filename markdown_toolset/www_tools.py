@@ -22,6 +22,8 @@ def is_url(url: str, allowed_url_prefixes=('http', 'ftp', 'https', 'ftps')) -> b
     """
     Check url for prefix match.
     """
+    if not isinstance(url, str):
+        return False
     l_url = url.lower()
     for prefix in set(allowed_url_prefixes):
         if l_url.startswith(prefix.lower()):
